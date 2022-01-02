@@ -16,6 +16,9 @@ provider "aws" {
 }
 
 # data
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 data "aws_s3_bucket" "data_platform" {
   bucket = "grejdi.data-platform"
 }
@@ -47,12 +50,13 @@ resource "aws_iam_role" "data_platform_eventbridge" {
         {
           Action   = "states:StartExecution"
           Effect   = "Allow"
-          Resource = "arn:aws:states:us-east-1:170458677850:stateMachine:data_platform_incoming"
+          Resource = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_incoming"
         }
       ]
     })
   }
 }
+
 resource "aws_iam_role" "data_platform_stepfunctions" {
   name = "data_platform_stepfunctions"
 
@@ -99,6 +103,14 @@ resource "aws_iam_role" "data_platform_stepfunctions" {
   }
 }
 
+# resource "aws_iam_user" "data_platform_github_actions" {
+#   name = "data_platform_github_actions"
+# }
+# resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
+
+# }
+
+
 # glue.tf
 resource "aws_cloudtrail" "data_platform_incoming" {
   name = "data_platform_incoming"
@@ -134,7 +146,7 @@ resource "aws_cloudtrail" "data_platform_incoming" {
 resource "aws_cloudwatch_event_target" "data_platform_incoming" {
   target_id = "data_platform_incoming"
   rule      = aws_cloudwatch_event_rule.data_platform_incoming.name
-  arn       = "arn:aws:states:us-east-1:170458677850:stateMachine:data_platform_incoming"
+  arn       = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_incoming"
   role_arn  = aws_iam_role.data_platform_eventbridge.arn
 }
 resource "aws_cloudwatch_event_rule" "data_platform_incoming" {
@@ -222,11 +234,11 @@ resource "aws_s3_bucket" "data_platform" {
         "Service": "cloudtrail.amazonaws.com"
       },
       "Action": "s3:PutObject",
-      "Resource": "${data.aws_s3_bucket.data_platform.arn}/cloudtrail/incoming/AWSLogs/170458677850/*",
+      "Resource": "${data.aws_s3_bucket.data_platform.arn}/cloudtrail/incoming/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
       "Condition": {
         "StringEquals": {
           "s3:x-amz-acl": "bucket-owner-full-control",
-          "AWS:SourceArn": "arn:aws:cloudtrail:us-east-1:170458677850:trail/data_platform_incoming"
+          "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/data_platform_incoming"
         }
       }
     }
