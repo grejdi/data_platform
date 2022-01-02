@@ -23,6 +23,11 @@ data "aws_s3_bucket" "data_platform" {
   bucket = "grejdi.data-platform"
 }
 
+# globals.tf
+resource "aws_ecr_repository" "data_platform" {
+  name = "data_platform"
+}
+
 # iam.tf
 resource "aws_iam_role" "data_platform_eventbridge" {
   name = "data_platform_eventbridge"
@@ -103,12 +108,59 @@ resource "aws_iam_role" "data_platform_stepfunctions" {
   }
 }
 
-# resource "aws_iam_user" "data_platform_github_actions" {
-#   name = "data_platform_github_actions"
-# }
-# resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
+resource "aws_iam_user" "data_platform_github_actions" {
+  name = "data_platform_github_actions"
+}
+resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
+  name = "data_platform_github_actions_policy"
+  user = aws_iam_user.data_platform_github_actions.name
 
-# }
+  policy = jsonencode({
+    Version    = "2012-10-17",
+    Statement = [
+        {
+            Effect = "Allow",
+            Action = [
+                "ecr:BatchGetImage",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:CompleteLayerUpload",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:InitiateLayerUpload",
+                "ecr:PutImage",
+                "ecr:UploadLayerPart"
+            ],
+            Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/data_platform"
+        },
+        {
+            Effect   = "Allow",
+            Action   = "ecr:GetAuthorizationToken",
+            Resource = "*"
+        },
+        {
+            Effect   = "Allow",
+            Action   = [
+                "ecs:RunTask"
+            ],
+            Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/data_platform"
+        },
+        {
+            Effect   = "Allow",
+            Action   = [
+                "iam:PassRole"
+            ],
+            Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/data_platform_ecs"
+        },
+        {
+            Effect   = "Allow",
+            Action   = [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            Resource = "${aws_s3_bucket.data_platform.arn}/operations/*"
+        }
+    ]
+  })
+}
 
 
 # glue.tf
