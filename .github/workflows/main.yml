@@ -28,6 +28,7 @@ jobs:
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
       - name: Build container and push to repository
+        working-directory: ${{github.workspace}}
         run: >
           docker build --load --tag 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform:main-latest .
           aws ecr get-login-password | docker login --username AWS --password-stdin 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform
