@@ -10,7 +10,7 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-import data_platform
+from data_platform.glue import incoming
 
 ## @params: [JOB_NAME, OBJECT_KEY]
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'OBJECT_KEY'])
@@ -36,6 +36,6 @@ job.init(args['JOB_NAME'], args)
 
 logging.error('GLUE HERE: {}'.format(args.get('OBJECT_KEY', 'OBJECT NOT FOUND')))
 
-data_platform.glue.incoming.main()
+incoming.main()
 
 job.commit()
