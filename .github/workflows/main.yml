@@ -43,8 +43,8 @@ jobs:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws_default_region: ${{secrets.AWS_DEFAULT_REGION}}
-          ecs_cluster: data_platform
-          ecs_task_definition: data_platform
-          vpc_subnet: subnet-0c3aafae091911cb0
-          vpc_security_group: sg-04e0aae4bcc4ede15
+          ecs_cluster: arn:aws:ecs:us-east-1:170458677850:cluster/dataplatform
+          ecs_task_definition: arn:aws:ecs:us-east-1:170458677850:task-definition/dataplatform
+          vpc_subnet: subnet-0a99fcc9c9fe1de79
+          vpc_security_group: sg-06ac1dfad4ebcebb4
           vpc_assign_public_ip: ENABLED
