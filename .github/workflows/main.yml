@@ -27,14 +27,14 @@ jobs:
       - name: Sync aws/s3/ to s3://grejdi.data-platform/
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
-      # - name: Run task
-      #   uses: grejdi/actions/amazon_ecs__run_task@v1
-      #   with:
-      #     aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
-      #     aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-      #     aws_default_region: us-east-1
-      #     ecs_cluster: arn:aws:ecs:us-east-1:170458677850:cluster/plan
-      #     ecs_task_definition: arn:aws:ecs:us-east-1:170458677850:task-definition/plan
-      #     vpc_subnet: subnet-0c3aafae091911cb0
-      #     vpc_security_group: sg-04e0aae4bcc4ede15
-      #     vpc_auto_assign_ip: ENABLED
+      - name: Run task
+        uses: grejdi/actions/amazon_ecs__run_task@v1
+        with:
+          aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_default_region: us-east-1
+          ecs_cluster: data_platform
+          ecs_task_definition: data_platform
+          vpc_subnet: subnet-0c3aafae091911cb0
+          vpc_security_group: sg-04e0aae4bcc4ede15
+          vpc_auto_assign_ip: ENABLED

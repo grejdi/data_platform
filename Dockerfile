@@ -10,4 +10,4 @@ COPY . .
 # install all required packages
 RUN pip install -r requirements.txt
 
-CMD ["echo", "Container 'main' ready!"]
+CMD ["echo", "Container ready!"]
