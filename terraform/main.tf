@@ -304,7 +304,8 @@ resource "aws_sfn_state_machine" "data_platform_incoming" {
         "JobName": "data_platform_incoming",
         "Arguments": {
           "--OBJECT_KEY.$": "$.detail.requestParameters.key",
-          "--extra-py-files": "s3://grejdi.data-platform/operations/packages/data_platform.zip"
+          "--extra-py-files": "s3://grejdi.data-platform/operations/packages/data_platform.zip",
+          "--additional-python-modules": "logging_tree==1.9"
         }
       },
       "End": true,
