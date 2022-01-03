@@ -132,23 +132,6 @@ resource "aws_iam_role" "data_platform_glue" {
 
       Statement = [
         {
-            Effect = "Allow",
-            Action = [
-                "glue:*",
-                "s3:GetBucketLocation",
-                "s3:ListBucket",
-                "s3:ListAllMyBuckets",
-                "s3:GetBucketAcl",
-                "iam:ListRolePolicies",
-                "iam:GetRole",
-                "iam:GetRolePolicy",
-                "cloudwatch:PutMetricData"
-            ],
-            Resource = [
-                "*"
-            ]
-        },
-        {
           Action   = [
             "s3:ListBucket"
           ]
@@ -181,7 +164,7 @@ resource "aws_iam_role" "data_platform_glue" {
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue*"
           ]
         }
       ]
@@ -342,9 +325,11 @@ EOF
 }
 
 resource "aws_glue_job" "data_platform_incoming" {
-  name         = "data_platform_incoming"
-  role_arn     = aws_iam_role.data_platform_glue.arn
-  glue_version = "2.0"
+  name              = "data_platform_incoming"
+  role_arn          = aws_iam_role.data_platform_glue.arn
+  glue_version      = "2.0"
+  number_of_workers = 10
+  worker_type       = "G.1X"
 
   command {
     script_location = "s3://${aws_s3_bucket.data_platform.id}/operations/jobs/incoming.py"
