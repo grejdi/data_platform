@@ -2,7 +2,7 @@
 import logging
 
 def main():
-  logging.info('HERE')
+  logging.error('GLUE PACKAGE HERE!')
 
 if __name__ == '__main__':
   main()

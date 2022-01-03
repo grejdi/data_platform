@@ -108,6 +108,87 @@ resource "aws_iam_role" "data_platform_stepfunctions" {
   }
 }
 
+resource "aws_iam_role" "data_platform_glue" {
+  name = "data_platform_glue"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "data_platform_glue_inline_policy"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+
+      Statement = [
+        {
+            Effect = "Allow",
+            Action = [
+                "glue:*",
+                "s3:GetBucketLocation",
+                "s3:ListBucket",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketAcl",
+                "iam:ListRolePolicies",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "cloudwatch:PutMetricData"
+            ],
+            Resource = [
+                "*"
+            ]
+        },
+        {
+          Action   = [
+            "s3:ListBucket"
+          ]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.data_platform.arn
+        },
+        {
+          Action   = [
+            "s3:GetObject"
+          ]
+          Effect   = "Allow"
+          Resource = [
+            "${aws_s3_bucket.data_platform.arn}/incoming/*",
+            "${aws_s3_bucket.data_platform.arn}/operations/*"
+          ]
+        },
+        {
+          Action   = [
+            "s3:PutObject",
+            "s3:PutObjectAcl"
+          ]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.data_platform.arn}/output/*"
+        },
+        {
+          Action   = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Effect   = "Allow"
+          Resource = [
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/*"
+          ]
+        }
+      ]
+    })
+  }
+}
+
 resource "aws_iam_user" "data_platform_github_actions" {
   name = "data_platform_github_actions"
 }
@@ -118,46 +199,53 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
   policy = jsonencode({
     Version    = "2012-10-17",
     Statement = [
-        {
-            Effect = "Allow",
-            Action = [
-                "ecr:BatchGetImage",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:CompleteLayerUpload",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:InitiateLayerUpload",
-                "ecr:PutImage",
-                "ecr:UploadLayerPart"
-            ],
-            Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/data_platform"
-        },
-        {
-            Effect   = "Allow",
-            Action   = "ecr:GetAuthorizationToken",
-            Resource = "*"
-        },
-        {
-            Effect   = "Allow",
-            Action   = [
-                "ecs:RunTask"
-            ],
-            Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/data_platform"
-        },
-        {
-            Effect   = "Allow",
-            Action   = [
-                "iam:PassRole"
-            ],
-            Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/data_platform_ecs"
-        },
-        {
-            Effect   = "Allow",
-            Action   = [
-                "s3:PutObject",
-                "s3:PutObjectAcl"
-            ],
-            Resource = "${aws_s3_bucket.data_platform.arn}/operations/*"
-        }
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ],
+        Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/data_platform"
+      },
+      {
+        Effect   = "Allow",
+        Action   = "ecr:GetAuthorizationToken",
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecs:RunTask"
+        ],
+        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/data_platform"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "iam:PassRole"
+        ],
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/data_platform_ecs"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "s3:ListBucket"
+        ],
+        Resource = aws_s3_bucket.data_platform.arn
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Resource = "${aws_s3_bucket.data_platform.arn}/operations/*"
+      }
     ]
   })
 }
@@ -198,7 +286,7 @@ resource "aws_cloudtrail" "data_platform_incoming" {
 resource "aws_cloudwatch_event_target" "data_platform_incoming" {
   target_id = "data_platform_incoming"
   rule      = aws_cloudwatch_event_rule.data_platform_incoming.name
-  arn       = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_incoming"
+  arn       = aws_sfn_state_machine.data_platform_incoming.arn
   role_arn  = aws_iam_role.data_platform_eventbridge.arn
 }
 resource "aws_cloudwatch_event_rule" "data_platform_incoming" {
@@ -253,6 +341,16 @@ resource "aws_sfn_state_machine" "data_platform_incoming" {
 EOF
 }
 
+resource "aws_glue_job" "data_platform_incoming" {
+  name         = "data_platform_incoming"
+  role_arn     = aws_iam_role.data_platform_glue.arn
+  glue_version = "2.0"
+
+  command {
+    script_location = "s3://${aws_s3_bucket.data_platform.id}/operations/jobs/incoming.py"
+  }
+}
+
 # s3.tf
 resource "aws_s3_account_public_access_block" "data_platform_block" {
   block_public_acls       = true
@@ -290,7 +388,7 @@ resource "aws_s3_bucket" "data_platform" {
       "Condition": {
         "StringEquals": {
           "s3:x-amz-acl": "bucket-owner-full-control",
-          "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/data_platform_incoming"
+          "AWS:SourceArn": "${aws_cloudtrail.data_platform_incoming.arn}"
         }
       }
     }
