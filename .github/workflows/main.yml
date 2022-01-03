@@ -27,14 +27,20 @@ jobs:
       - name: Sync aws/s3/ to s3://grejdi.data-platform/
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
+      - name: Build container and push to repository
+        run: >
+          docker build --load --tag 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform:main-latest .
+          aws ecr get-login-password | docker login --username AWS --password-stdin 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform
+          docker push 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform:main-latest
+
       - name: Run task
         uses: grejdi/actions/amazon_ecs__run_task@v1
         with:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_default_region: us-east-1
+          aws_default_region: ${{secrets.AWS_DEFAULT_REGION}}
           ecs_cluster: data_platform
           ecs_task_definition: data_platform
           vpc_subnet: subnet-0c3aafae091911cb0
           vpc_security_group: sg-04e0aae4bcc4ede15
-          vpc_auto_assign_ip: ENABLED
+          vpc_assign_public_ip: ENABLED
