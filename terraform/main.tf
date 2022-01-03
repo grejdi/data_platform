@@ -158,13 +158,12 @@ resource "aws_iam_role" "data_platform_glue" {
         },
         {
           Action   = [
-            "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/*"
           ]
         }
       ]
@@ -304,7 +303,8 @@ resource "aws_sfn_state_machine" "data_platform_incoming" {
       "Parameters": {
         "JobName": "data_platform_incoming",
         "Arguments": {
-          "--OBJECT_KEY.$": "$.detail.requestParameters.key"
+          "--OBJECT_KEY.$": "$.detail.requestParameters.key",
+          "--extra-py-files": "s3://grejdi.data-platform/operations/packages/data_platform.zip"
         }
       },
       "End": true,
@@ -322,6 +322,18 @@ resource "aws_sfn_state_machine" "data_platform_incoming" {
   }
 }
 EOF
+}
+
+resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_error" {
+  name              = "/aws-glue/jobs/error"
+  retention_in_days = 30
+  tags              = {}
+}
+
+resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_output" {
+  name              = "/aws-glue/jobs/output"
+  retention_in_days = 30
+  tags              = {}
 }
 
 resource "aws_glue_job" "data_platform_incoming" {
