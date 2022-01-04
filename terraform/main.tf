@@ -402,14 +402,24 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
         Action   = [
           "ecs:RunTask"
         ],
-        Resource = aws_ecs_task_definition.data_platform.arn
+        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/dataplatform"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecs:DescribeTasks"
+        ],
+        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/dataplatform/*"
       },
       {
         Effect   = "Allow",
         Action   = [
           "iam:PassRole"
         ],
-        Resource = aws_iam_role.data_platform_ecs_execution.arn
+        Resource = [
+          aws_iam_role.data_platform_ecs_execution.arn,
+          aws_iam_role.data_platform_ecs_task.arn
+        ]
       },
       {
         Effect   = "Allow",

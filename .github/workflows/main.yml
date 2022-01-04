@@ -17,34 +17,34 @@ jobs:
       AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
 
     steps:
-      - name: Checkout repository code
+      - name: Checkout repository code.
         uses: actions/checkout@v2
 
-      - name: Zip up package and place in aws/s3/
+      - name: Zip up package and place in aws/s3/.
         working-directory: ${{github.workspace}}
         run: zip -r ./aws/s3/packages/data_platform.zip ./data_platform/
 
-      - name: Sync aws/s3/ to s3://grejdi.data-platform/
+      - name: Sync aws/s3/ to s3://grejdi.data-platform/.
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
-      - name: Build container
+      - name: Build container.
         working-directory: ${{github.workspace}}
-        run: docker build --tag 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform:main-latest .
+        run: docker build --tag 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest .
 
-      - name: Got repository login
-        run: aws ecr get-login-password | docker login --username AWS --password-stdin 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform
+      - name: Get repository login.
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
 
-      - name: Push to repository
-        run: docker push 170458677850.dkr.ecr.us-east-1.amazonaws.com/dataplatform:main-latest
+      - name: Push to repository.
+        run: docker push 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
 
-      - name: Run task
+      - name: Run task.
         uses: grejdi/actions/amazon_ecs__run_task@v1
         with:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws_default_region: ${{secrets.AWS_DEFAULT_REGION}}
-          ecs_cluster: arn:aws:ecs:us-east-1:170458677850:cluster/dataplatform
-          ecs_task_definition: arn:aws:ecs:us-east-1:170458677850:task-definition/dataplatform
+          ecs_cluster: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:170458677850:cluster/dataplatform
+          ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:170458677850:task-definition/dataplatform
           vpc_subnet: subnet-0a99fcc9c9fe1de79
           vpc_security_group: sg-06ac1dfad4ebcebb4
           vpc_assign_public_ip: ENABLED
