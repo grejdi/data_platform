@@ -15,6 +15,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
       AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+      AWS_ACCOUNT_ID: ${{secrets.AWS_ACCOUNT_ID}}
 
     steps:
       - name: Checkout repository code.
@@ -29,13 +30,13 @@ jobs:
 
       - name: Build container.
         working-directory: ${{github.workspace}}
-        run: docker build --tag 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest .
+        run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest .
 
       - name: Get repository login.
-        run: aws ecr get-login-password | docker login --username AWS --password-stdin 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
 
       - name: Push to repository.
-        run: docker push 170458677850.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
+        run: docker push ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
 
       - name: Run task.
         uses: grejdi/actions/amazon_ecs__run_task@v1
@@ -43,8 +44,7 @@ jobs:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws_default_region: ${{secrets.AWS_DEFAULT_REGION}}
-          ecs_cluster: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:170458677850:cluster/dataplatform
-          ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:170458677850:task-definition/dataplatform
-          vpc_subnet: subnet-0a99fcc9c9fe1de79
-          vpc_security_group: sg-06ac1dfad4ebcebb4
-          vpc_assign_public_ip: ENABLED
+          ecs_cluster: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:cluster/dataplatform
+          ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:task-definition/dataplatform
+          ecs_task_network_configuration: "awsvpcConfiguration={subnets=[subnet-0a99fcc9c9fe1de79],securityGroups=[sg-06ac1dfad4ebcebb4],assignPublicIp=ENABLED}"
+          ecs_task_overrides: '{ "containerOverrides": [ { "name": "dataplatform", "command": ["python", "--version"] } ] }'
