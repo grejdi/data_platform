@@ -38,16 +38,12 @@ else:
 
   # generate IAM-auth password
   dbPassword = rds.generate_db_auth_token(
-    DBHostname='dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com',
+    DBHostname='dataplatform.ccnlslbcr8ut.us-east-1.rds.amazonaws.com',
     Port=dbPort,
     DBUsername=dbUser
   )
-  # rds provided pem file (see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html)
-  # dbSSL = {
-  #   'sslmode': 'allow'
-  # }
 
-  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode=require'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
+  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode=require'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
 
 # create connection
 dbEngine = create_engine(dbURL)
