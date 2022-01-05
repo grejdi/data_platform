@@ -1,4 +1,5 @@
 .terraform*
-*.tf*
+*.tfstate*
 
 __pycache__
+db_data
