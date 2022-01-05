@@ -44,8 +44,8 @@ else:
   )
   # rds provided pem file (see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html)
   dbSSL = {
-    'sslmode': 'require',
-    'sslrootcert': 'data_platform/db/cert/us-east-1-bundle.pem'
+    'sslmode': 'verify-full',
+    'sslrootcert': '/data_platform/data_platform/db/cert/us-east-1-bundle.pem'
   }
 
   dbURL = 'postgresql://{}:{}@{}/{}'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)

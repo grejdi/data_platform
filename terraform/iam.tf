@@ -198,6 +198,11 @@ resource "aws_iam_role" "data_platform_ecs_execution" {
 
       Statement = [
         {
+          Action   = "rds-db:connect"
+          Effect   = "Allow"
+          Resource = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:prx-0294a7e8e8a2755e4/*"
+        },
+        {
           Action   = [
             "ecr:BatchGetImage",
             "ecr:BatchCheckLayerAvailability",
@@ -251,6 +256,11 @@ resource "aws_iam_role" "data_platform_ecs_task" {
       Version = "2012-10-17"
 
       Statement = [
+        {
+          Action   = "rds-db:connect"
+          Effect   = "Allow"
+          Resource = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:prx-0294a7e8e8a2755e4/*"
+        },
         {
           Action   = "states:StartExecution"
           Effect   = "Allow"
