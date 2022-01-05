@@ -43,15 +43,14 @@ else:
     DBUsername=dbUser
   )
   # rds provided pem file (see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html)
-  dbSSL = {
-    'sslmode': 'verify-full',
-    'sslrootcert': '/data_platform/data_platform/db/cert/us-east-1-bundle.pem'
-  }
+  # dbSSL = {
+  #   'sslmode': 'allow'
+  # }
 
-  dbURL = 'postgresql://{}:{}@{}/{}'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
+  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode=require'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
 
 # create connection
-dbEngine = create_engine(dbURL, connect_args=dbSSL)
+dbEngine = create_engine(dbURL)
 
 # database session maker
 dbSession = sessionmaker(dbEngine)
