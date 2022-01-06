@@ -10,7 +10,7 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-from data_platform.glue import incoming
+from data_platform.jobs import incoming
 
 ## @params: [JOB_NAME, OBJECT_KEY]
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'OBJECT_KEY'])

@@ -150,6 +150,13 @@ resource "aws_ecs_task_definition" "data_platform" {
     "cpu": 256,
     "memory": 512,
     "essential": true,
+    "environment": [
+      {"name": "ENV", "value": "main"},
+      {"name": "DB_HOST", "value": "${aws_db_proxy.data_platform.endpoint}"},
+      {"name": "DB_PORT", "value": "5432"},
+      {"name": "DB_USER", "value": "postgres"},
+      {"name": "DB_NAME", "value": "dataplatform"}
+    ],
     "logConfiguration" : {
       "logDriver" :"awslogs",
       "options" : {

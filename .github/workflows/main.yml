@@ -38,7 +38,7 @@ jobs:
       - name: Push to repository.
         run: docker push ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
 
-      - name: Run task.
+      - name: Run task to run migrations.
         uses: grejdi/actions/amazon_ecs__run_task@v1
         with:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
@@ -47,4 +47,4 @@ jobs:
           ecs_cluster: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:cluster/dataplatform
           ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:task-definition/dataplatform
           ecs_task_network_configuration: "awsvpcConfiguration={subnets=[subnet-0a99fcc9c9fe1de79],securityGroups=[sg-06ac1dfad4ebcebb4],assignPublicIp=ENABLED}"
-          ecs_task_overrides: '{ "containerOverrides": [ { "name": "dataplatform", "command": ["python", "--version"] } ] }'
+          ecs_task_overrides: '{ "containerOverrides": [ { "name": "dataplatform", "command": ["alembic", "upgrade", "head"] } ] }'
