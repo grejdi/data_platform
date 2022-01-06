@@ -29,17 +29,9 @@ connectArgs = {}
 if os.environ.get('ENV') == 'local':
   # a couple of options for local based on whether user/password is set or not
   if dbUser and dbPassword:
-    connectArgs = {
-      'host': dbHost,
-      'user': dbUser,
-      'password': dbPassword,
-      'dbname': dbName
-    }
+    dbURL = 'postgresql+psycopg2://{}:{}@{}/{}'.format(dbUser, dbPassword, dbHost, dbName)
   else:
-    connectArgs = {
-      'host': dbHost,
-      'dbname': dbName
-    }
+    dbURL = 'postgresql+psycopg2://{}/{}'.format(dbHost, dbName)
 
 # otherwise running on RDS
 else:
@@ -54,18 +46,14 @@ else:
   )
 
   connectArgs = {
-    'host': 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com',
-    'user': dbUser,
-    'password': dbPassword,
-    'dbname': dbName,
     'sslmode': 'verify-full',
     'sslrootcert': '/data_platform/data_platform/db/certs/AmazonRootCA1.pem',
   }
 
-  # dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode=verify-full'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
+  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
 
 # create connection
-dbEngine = create_engine('postgresql+psycopg2://', connect_args=connectArgs)
+dbEngine = create_engine(dbURL, connect_args=connectArgs)
 
 # database session maker
 dbSession = sessionmaker(dbEngine)
