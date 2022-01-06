@@ -39,8 +39,6 @@ else:
   # initialize clients
   rds = boto3.client('rds')
 
-  dbHost = 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com'
-
   # generate IAM-auth password
   dbPassword = rds.generate_db_auth_token(DBHostname=dbHost,Port=dbPort,DBUsername=dbUser)
 
