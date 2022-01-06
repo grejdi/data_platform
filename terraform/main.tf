@@ -82,6 +82,13 @@ resource "aws_default_security_group" "data_platform_default" {
   vpc_id      = aws_vpc.data_platform.id
 
   ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol  = "tcp"
+    from_port = 5432
+    to_port   = 5432
+  }
+
+  ingress {
     protocol  = -1
     self      = true
     from_port = 0

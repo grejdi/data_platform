@@ -61,6 +61,12 @@ resource "aws_db_proxy" "data_platform" {
   }
 
   tags = {}
+
+  timeouts {
+    create = null
+    delete = null
+    update = null
+  }
 }
 
 resource "aws_db_proxy_default_target_group" "data_platform" {
@@ -68,10 +74,15 @@ resource "aws_db_proxy_default_target_group" "data_platform" {
 
   connection_pool_config {
     connection_borrow_timeout    = 120
-    init_query                   = "SET x=1, y=2"
+    init_query                   = ""
     max_connections_percent      = 100
     max_idle_connections_percent = 50
-    session_pinning_filters      = ["EXCLUDE_VARIABLE_SETS"]
+    session_pinning_filters      = []
+  }
+
+  timeouts {
+    create = null
+    update = null
   }
 }
 

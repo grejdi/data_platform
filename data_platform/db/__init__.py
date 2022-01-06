@@ -1,6 +1,7 @@
 
 import boto3
 import os
+import urllib.parse
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -38,19 +39,19 @@ else:
   # initialize clients
   rds = boto3.client('rds')
 
+  dbHost = 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com'
+
   # generate IAM-auth password
-  dbPassword = rds.generate_db_auth_token(
-    DBHostname='dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com',
-    Port=dbPort,
-    DBUsername=dbUser
+  dbPassword = rds.generate_db_auth_token(DBHostname=dbHost,Port=dbPort,DBUsername=dbUser)
+
+  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode={}&sslrootcert={}'.format(
+    dbUser,
+    urllib.parse.quote_plus(dbPassword).replace('%', '%%'),
+    dbHost,
+    dbName,
+    'verify-full',
+    '/data_platform/data_platform/db/certs/AmazonRootCA1.pem'
   )
-
-  connectArgs = {
-    'sslmode': 'verify-full',
-    'sslrootcert': '/data_platform/data_platform/db/certs/AmazonRootCA1.pem',
-  }
-
-  dbURL = 'postgresql+psycopg2://{}:{}@{}/{}'.format(dbUser, dbPassword.replace('%', '%%'), 'dataplatform.proxy-ccnlslbcr8ut.us-east-1.rds.amazonaws.com', dbName)
 
 # create connection
 dbEngine = create_engine(dbURL, connect_args=connectArgs)
