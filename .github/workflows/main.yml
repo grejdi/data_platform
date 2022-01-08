@@ -43,7 +43,7 @@ jobs:
 
       - name: Build container.
         working-directory: ${{github.workspace}}
-        run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest -f ./docker/Dockerfile.main
+        run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest -f ./docker/Dockerfile.main .
 
       - name: Get repository login.
         run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
