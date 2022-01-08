@@ -8,7 +8,8 @@ from sqlalchemy.orm import sessionmaker
 
 # import tables to put them in scope and allow alembic to autogenerate any changes
 from data_platform.db.models import (
-  incoming
+  prefix,
+  load
 )
 
 

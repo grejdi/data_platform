@@ -21,16 +21,29 @@ jobs:
       - name: Checkout repository code.
         uses: actions/checkout@v2
 
-      - name: Zip up package and place in aws/s3/.
+      - name: Setup Python.
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install python packages.
         working-directory: ${{github.workspace}}
-        run: zip -r ./aws/s3/packages/data_platform.zip ./data_platform/
+        run: pip install -r requirements.txt -t ./libs
+
+      - name: Zip up 'data_platform' package and place in aws/s3/.
+        working-directory: ${{github.workspace}}
+        run: zip -r ${{github.workspace}}/aws/s3/packages/data_platform.zip ./data_platform/
+
+      - name: Zip up libraries and append to 'data_platform' package.
+        working-directory: ${{github.workspace}}/libs
+        run: zip -r ${{github.workspace}}/aws/s3/packages/data_platform.zip ./
 
       - name: Sync aws/s3/ to s3://grejdi.data-platform/.
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
       - name: Build container.
         working-directory: ${{github.workspace}}
-        run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest .
+        run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest ./docker/Dockerfile.main
 
       - name: Get repository login.
         run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
@@ -48,3 +61,6 @@ jobs:
           ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:task-definition/dataplatform
           ecs_task_network_configuration: "awsvpcConfiguration={subnets=[subnet-0a99fcc9c9fe1de79],securityGroups=[sg-06ac1dfad4ebcebb4],assignPublicIp=ENABLED}"
           ecs_task_overrides: '{ "containerOverrides": [ { "name": "dataplatform", "command": ["alembic", "upgrade", "head"] } ] }'
+
+      - name: Update 'data_platform' AWS Lambda function.
+        run: aws --version

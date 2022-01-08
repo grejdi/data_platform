@@ -23,158 +23,6 @@ data "aws_s3_bucket" "data_platform" {
   bucket = "grejdi.data-platform"
 }
 
-# ecs.tf
-resource "aws_vpc" "data_platform" {
-  cidr_block = "20.0.0.0/16"
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_subnet" "data_platform" {
-  vpc_id            = aws_vpc.data_platform.id
-  cidr_block        = "20.0.0.0/24"
-  availability_zone = "us-east-1c"
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_subnet" "data_platform_d" {
-  vpc_id     = aws_vpc.data_platform.id
-  cidr_block = "20.0.1.0/24"
-  availability_zone = "us-east-1d"
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_internet_gateway" "data_platform" {
-  vpc_id = aws_vpc.data_platform.id
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_route_table" "data_platform" {
-  vpc_id = aws_vpc.data_platform.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.data_platform.id
-  }
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_route_table_association" "data_platform" {
-  subnet_id      = aws_subnet.data_platform.id
-  route_table_id = aws_route_table.data_platform.id
-}
-
-resource "aws_default_security_group" "data_platform_default" {
-  vpc_id      = aws_vpc.data_platform.id
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    protocol  = "tcp"
-    from_port = 5432
-    to_port   = 5432
-  }
-
-  ingress {
-    protocol  = -1
-    self      = true
-    from_port = 0
-    to_port   = 0
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "data_platform_default"
-  }
-}
-
-resource "aws_security_group" "data_platform" {
-  name        = "data_platform"
-  vpc_id      = aws_vpc.data_platform.id
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = {
-    Name = "data_platform"
-  }
-}
-
-resource "aws_ecr_repository" "data_platform" {
-  name = "dataplatform"
-}
-
-resource "aws_ecs_cluster" "data_platform" {
-  name = "dataplatform"
-  capacity_providers = ["FARGATE"]
-}
-
-resource "aws_ecs_task_definition" "data_platform" {
-  family                   = "dataplatform"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
-  execution_role_arn       = aws_iam_role.data_platform_ecs_execution.arn
-  task_role_arn            = aws_iam_role.data_platform_ecs_task.arn
-
-  container_definitions    = <<TASK_DEFINITION
-[
-  {
-    "name": "dataplatform",
-    "image": "${aws_ecr_repository.data_platform.repository_url}:main-latest",
-    "cpu": 256,
-    "memory": 512,
-    "essential": true,
-    "environment": [
-      {"name": "ENV", "value": "main"},
-      {"name": "DB_HOST", "value": "${aws_db_proxy.data_platform.endpoint}"},
-      {"name": "DB_PORT", "value": "5432"},
-      {"name": "DB_USER", "value": "postgres"},
-      {"name": "DB_NAME", "value": "dataplatform"}
-    ],
-    "logConfiguration" : {
-      "logDriver" :"awslogs",
-      "options" : {
-          "awslogs-region"        : "${data.aws_region.current.name}",
-          "awslogs-group"         : "/ecs/data_platform",
-          "awslogs-stream-prefix" : "ecs"
-      }
-    }
-  }
-]
-TASK_DEFINITION
-
-  runtime_platform {
-    operating_system_family = "LINUX"
-    cpu_architecture        = "X86_64"
-  }
-}
-
 # glue.tf
 resource "aws_cloudtrail" "data_platform_incoming" {
   name = "data_platform_incoming"
@@ -207,11 +55,41 @@ resource "aws_cloudtrail" "data_platform_incoming" {
   }
 }
 
+# resource "aws_sqs_queue" "data_platform_incoming" {
+#   name                      = "data_platform_incoming"
+#   message_retention_seconds = 604800 # 7 days
+# }
+# resource "aws_sqs_queue_policy" "data_platform_incoming" {
+#   queue_url = aws_sqs_queue.data_platform_incoming.id
+
+#   policy = <<POLICY
+# {
+#   "Id": "sqspolicy",
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Sid": "first",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "events.amazonaws.com"
+#       },
+#       "Action": "sqs:SendMessage",
+#       "Resource": "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:data_platform_incoming",
+#       "Condition": {
+#         "ArnEquals": {
+#           "aws:SourceArn": "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule/data_platform_incoming"
+#         }
+#       }
+#     }
+#   ]
+# }
+# POLICY
+# }
+
 resource "aws_cloudwatch_event_target" "data_platform_incoming" {
   target_id = "data_platform_incoming"
   rule      = aws_cloudwatch_event_rule.data_platform_incoming.name
-  arn       = aws_sfn_state_machine.data_platform_incoming.arn
-  role_arn  = aws_iam_role.data_platform_eventbridge.arn
+  arn       = aws_lambda_function.data_platform.arn
 }
 resource "aws_cloudwatch_event_rule" "data_platform_incoming" {
   name = "data_platform_incoming"
@@ -231,8 +109,8 @@ resource "aws_cloudwatch_event_rule" "data_platform_incoming" {
 PATTERN
 }
 
-resource "aws_sfn_state_machine" "data_platform_incoming" {
-  name     = "data_platform_incoming"
+resource "aws_sfn_state_machine" "data_platform_ingest" {
+  name     = "data_platform_ingest"
   role_arn = aws_iam_role.data_platform_stepfunctions.arn
 
   definition = <<EOF
@@ -267,8 +145,14 @@ resource "aws_sfn_state_machine" "data_platform_incoming" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "data_platform_incoming_ecs" {
+resource "aws_cloudwatch_log_group" "data_platform_ecs" {
   name              = "/ecs/data_platform"
+  retention_in_days = 30
+  tags              = {}
+}
+
+resource "aws_cloudwatch_log_group" "data_platform_lambda" {
+  name              = "/aws/lambda/data_platform"
   retention_in_days = 30
   tags              = {}
 }
@@ -285,6 +169,11 @@ resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_output" {
   tags              = {}
 }
 
+
+
+
+
+
 resource "aws_glue_job" "data_platform_incoming" {
   name              = "data_platform_incoming"
   role_arn          = aws_iam_role.data_platform_glue.arn
@@ -297,43 +186,15 @@ resource "aws_glue_job" "data_platform_incoming" {
   }
 }
 
-# s3.tf
-resource "aws_s3_bucket" "data_platform" {
-  bucket = "grejdi.data-platform"
-  acl    = "private"
-  tags   = {}
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AWSCloudTrailAclCheck20150319",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "cloudtrail.amazonaws.com"
-      },
-      "Action": "s3:GetBucketAcl",
-      "Resource": "${data.aws_s3_bucket.data_platform.arn}"
-    },
-    {
-      "Sid": "AWSCloudTrailWrite20150319",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "cloudtrail.amazonaws.com"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "${data.aws_s3_bucket.data_platform.arn}/cloudtrail/incoming/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
-      "Condition": {
-        "StringEquals": {
-          "s3:x-amz-acl": "bucket-owner-full-control",
-          "AWS:SourceArn": "${aws_cloudtrail.data_platform_incoming.arn}"
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
+
+
+
+
+
+
+
+
+
 
 

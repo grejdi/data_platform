@@ -4,5 +4,7 @@
 __pycache__
 db_data
 venv
+libs
 
 .env
+.DS_Store

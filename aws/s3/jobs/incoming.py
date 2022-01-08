@@ -13,7 +13,7 @@ from awsglue.job import Job
 from data_platform.jobs import incoming
 
 ## @params: [JOB_NAME, OBJECT_KEY]
-args = getResolvedOptions(sys.argv, ['JOB_NAME', 'OBJECT_KEY'])
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 
 # test out logging
 print('PRINT')

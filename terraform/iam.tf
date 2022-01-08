@@ -56,9 +56,9 @@ resource "aws_iam_role" "data_platform_eventbridge" {
 
       Statement = [
         {
-          Action   = "states:StartExecution"
+          Action   = "lambda:InvokeFunction"
           Effect   = "Allow"
-          Resource = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_incoming"
+          Resource = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:data_platform"
         }
       ]
     })
@@ -134,6 +134,13 @@ resource "aws_iam_role" "data_platform_glue" {
       Version = "2012-10-17"
 
       Statement = [
+        {
+          Action   = [
+            "glue:*"
+          ]
+          Effect   = "Allow"
+          Resource = "*"
+        },
         {
           Action   = [
             "s3:ListBucket"
@@ -274,6 +281,58 @@ resource "aws_iam_role" "data_platform_ecs_task" {
           Effect   = "Allow"
           Resource = [
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*"
+          ]
+        },
+        {
+          Action   = [
+            "sqs:DeleteMessage",
+            "sqs:ReceiveMessage",
+          ]
+          Effect   = "Allow"
+          Resource = "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:data_platform_incoming"
+        }
+      ]
+    })
+  }
+}
+
+resource "aws_iam_role" "data_platform_lambda" {
+  name = "data_platform_lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "data_platform_lambda_inline_policy"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+
+      Statement = [
+        {
+          Action   = "rds-db:connect"
+          Effect   = "Allow"
+          Resource = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:prx-0294a7e8e8a2755e4/*"
+        },
+        {
+          Action   = [
+            "logs:CreateLogStream",
+            "logs:DescribeLogStreams",
+            "logs:PutLogEvents"
+          ]
+          Effect   = "Allow"
+          Resource = [
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform:*"
           ]
         }
       ]
