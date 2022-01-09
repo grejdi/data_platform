@@ -16,6 +16,8 @@ def run():
     loadRecs = db.query(Load, Prefix).join(Prefix, Load.prefix_id == Prefix.id).filter(Load.status == 'ready').order_by(Load.s3_key).all()
     logging.error(loadRecs)
 
+  logging.error('END')
+
 
 if __name__ == '__main__':
   run()

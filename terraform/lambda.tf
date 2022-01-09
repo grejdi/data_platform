@@ -21,6 +21,17 @@ resource "aws_lambda_function" "data_platform_process_incoming" {
   handler = "process_incoming.run"
 
   runtime = "python3.7"
+
+  environment {
+    variables = {
+      ENV = "main"
+      DB_HOST = "${aws_db_proxy.data_platform.endpoint}"
+      DB_PORT = "5432"
+      DB_USER = "postgres"
+      DB_NAME = "dataplatform"
+      INGEST_STEP_FUNCTION_ARN = "${aws_sfn_state_machine.data_platform_ingest.arn}"
+    }
+  }
 }
 
 resource "aws_lambda_permission" "data_platform_process_incoming" {
