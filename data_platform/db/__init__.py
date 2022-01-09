@@ -21,7 +21,6 @@ dbHost = os.environ.get('DB_HOST')
 dbPort = os.environ.get('DB_PORT', '5432')
 dbUser = os.environ.get('DB_USER')
 dbPassword = os.environ.get('DB_PASSWORD')
-dbSSL = {} # no config initially
 dbName = os.environ.get('DB_NAME')
 # connection url to database
 dbURL = ''
@@ -42,10 +41,15 @@ else:
 
   # generate IAM-auth password
   dbPassword = rds.generate_db_auth_token(DBHostname=dbHost,Port=dbPort,DBUsername=dbUser)
+  logging.error(dbHost)
+  logging.error(dbPort)
+  logging.error(dbUser)
+  logging.error(dbPassword)
+  logging.error(dbName)
 
   dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode={}&sslrootcert={}'.format(
     dbUser,
-    dbPassword,
+    urllib.parse.quote_plus(dbPassword),
     dbHost,
     dbName,
     'verify-full',
