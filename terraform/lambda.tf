@@ -22,6 +22,11 @@ resource "aws_lambda_function" "data_platform_process_incoming" {
 
   runtime = "python3.7"
 
+  vpc_config {
+    subnet_ids         = [aws_subnet.data_platform.id]
+    security_group_ids = [aws_security_group.data_platform.id]
+  }
+
   environment {
     variables = {
       ENV = "main"

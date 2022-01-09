@@ -334,6 +334,15 @@ resource "aws_iam_role" "data_platform_lambda" {
           Resource = [
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform*"
           ]
+        },
+        {
+          Action   = [
+            "ec2:CreateNetworkInterface",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DeleteNetworkInterface"
+          ]
+          Effect   = "Allow"
+          Resource = "*"
         }
       ]
     })

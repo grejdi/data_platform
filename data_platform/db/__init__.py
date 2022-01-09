@@ -49,7 +49,7 @@ else:
     dbHost,
     dbName,
     'verify-full',
-    '/data_platform/data_platform/db/certs/AmazonRootCA1.pem'
+    './data_platform/db/certs/AmazonRootCA1.pem'
   )
 
 # create connection
