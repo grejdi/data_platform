@@ -45,7 +45,7 @@ else:
 
   dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode={}&sslrootcert={}'.format(
     dbUser,
-    dbPassword.replace('%', '%%'),
+    dbPassword,
     dbHost,
     dbName,
     'verify-full',
