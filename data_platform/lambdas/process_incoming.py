@@ -10,11 +10,11 @@ from data_platform.db.models.load import Load
 
 def run():
   logging.error('LAMBDA:: PROCESS INCOMING')
-  logging.error(build_description())
 
   with dbSession() as db:
     # get all load records in 'ready' status
     loadRecs = db.query(Load, Prefix).join(Prefix, Load.prefix_id == Prefix.id).filter(Load.status == 'ready').order_by(Load.s3_key).all()
+    logging.error(loadRecs)
 
 
 if __name__ == '__main__':

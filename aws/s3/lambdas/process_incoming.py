@@ -11,3 +11,6 @@ def run(event, context):
   process_incoming.run()
 
   return {}
+
+if __name__ == '__main__':
+  run({}, {})
