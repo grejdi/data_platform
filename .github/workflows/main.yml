@@ -30,28 +30,32 @@ jobs:
         working-directory: ${{github.workspace}}
         run: pip install -r requirements.txt -t ./libs
 
-      - name: Zip up 'data_platform' package and place in aws/s3/.
+      - name: Create package to be used for Lambda and Glue Jobs, and add lambda files.
+        working-directory: ${{github.workspace}}/aws/s3/lambdas
+        run: zip -r ${{github.workspace}}/aws/s3/packages/data_platform.zip ./
+
+      - name: Add 'data_platform' folder to package.
         working-directory: ${{github.workspace}}
         run: zip -r ${{github.workspace}}/aws/s3/packages/data_platform.zip ./data_platform/
 
-      - name: Zip up libraries and append to 'data_platform' package.
+      - name: Add python libs to package.
         working-directory: ${{github.workspace}}/libs
         run: zip -r ${{github.workspace}}/aws/s3/packages/data_platform.zip ./
 
-      - name: Sync aws/s3/ to s3://grejdi.data-platform/.
+      - name: Sync Glue Jobs and package to operations.
         run: aws s3 sync ${{github.workspace}}/aws/s3/ s3://grejdi.data-platform/operations/ --exclude "*/empty"
 
-      - name: Build container.
+      - name: Build main container.
         working-directory: ${{github.workspace}}
         run: docker build --tag ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest -f ./docker/Dockerfile.main .
 
       - name: Get repository login.
         run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform
 
-      - name: Push to repository.
+      - name: Push main container to repository.
         run: docker push ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
 
-      - name: Run task to run migrations.
+      - name: Run main container task to run migrations.
         uses: grejdi/actions/amazon_ecs__run_task@v1
         with:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}

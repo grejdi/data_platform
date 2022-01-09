@@ -332,7 +332,7 @@ resource "aws_iam_role" "data_platform_lambda" {
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform:*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform*"
           ]
         }
       ]
@@ -406,6 +406,13 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
           "s3:PutObjectAcl"
         ],
         Resource = "${aws_s3_bucket.data_platform.arn}/operations/*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "lambda:UpdateFunctionCode"
+        ],
+        Resource = aws_lambda_function.data_platform_process_incoming.arn
       }
     ]
   })

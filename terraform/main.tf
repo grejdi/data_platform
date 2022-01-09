@@ -89,7 +89,7 @@ resource "aws_cloudtrail" "data_platform_incoming" {
 resource "aws_cloudwatch_event_target" "data_platform_incoming" {
   target_id = "data_platform_incoming"
   rule      = aws_cloudwatch_event_rule.data_platform_incoming.name
-  arn       = aws_lambda_function.data_platform.arn
+  arn       = aws_lambda_function.data_platform_process_incoming.arn
 }
 resource "aws_cloudwatch_event_rule" "data_platform_incoming" {
   name = "data_platform_incoming"
@@ -151,8 +151,8 @@ resource "aws_cloudwatch_log_group" "data_platform_ecs" {
   tags              = {}
 }
 
-resource "aws_cloudwatch_log_group" "data_platform_lambda" {
-  name              = "/aws/lambda/data_platform"
+resource "aws_cloudwatch_log_group" "data_platform_lambda_processing_incoming" {
+  name              = "/aws/lambda/data_platform_process_incoming"
   retention_in_days = 30
   tags              = {}
 }
