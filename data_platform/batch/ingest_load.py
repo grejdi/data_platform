@@ -55,7 +55,7 @@ def run():
         stepFunctions.exceptions.StateMachineDoesNotExist,
         stepFunctions.exceptions.StateMachineDeleting
       ) as e:
-        db.query(Load).filter(Load.s3_key.in_(loadObjectKeys)).update({ Load.status: 'ready' })
+        db.query(Load).filter(Load.s3_key.in_(loadObjectKeys)).update({ Load.status: 'ingesting_error' })
         db.commit()
 
         logging.error('[data_platform] [batch] [ingest_load]: {}'.format(e))

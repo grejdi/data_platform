@@ -14,11 +14,13 @@ def run(loadS3Key):
   # intialize boto clients
   s3 = boto3.client('s3')
 
+  logging.error('HERE')
+
   # get s3 info for load
   try:
     loadS3Info = s3.head_object(
       Bucket=os.environ.get('S3_BUCKET_INCOMING'),
-      Key='{}{}'.format(os.environ.get('S3_BUCKET_INCOMING_PREFIX'), loadS3Key)
+      Key=loadS3Key
     )
   # if any exception, return with error
   except botocore.exceptions.ClientError as e:
@@ -36,12 +38,12 @@ def run(loadS3Key):
     # determine which prefix the load is for
     prefixAvailable = False
     for prefixRec in prefixRecs:
-      if loadS3Key.startswith('{}/'.format(prefixRec.s3_prefix)):
+      if loadS3Key.startswith('{}{}/'.format(os.environ.get('S3_BUCKET_INCOMING_PREFIX'), prefixRec.s3_prefix)):
         prefixAvailable = True
 
         # if we are trying to insert a snapshot key, we should update the snapshot
         # value for the prefix
-        if loadS3Key == prefixRec.snapshot_s3_key:
+        if loadS3Key == '{}{}'.format(os.environ.get('S3_BUCKET_INCOMING_PREFIX'), prefixRec.snapshot_s3_key):
           prefixRec.snapshot = loadS3Info.get('LastModified') 
 
         # insert a load record
