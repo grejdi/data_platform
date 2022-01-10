@@ -121,11 +121,10 @@ resource "aws_sfn_state_machine" "data_platform_ingest" {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Parameters": {
-        "JobName": "data_platform_incoming",
+        "JobName": "${aws_glue_job.data_platform_ingest.name}",
         "Arguments": {
           "--OBJECT_KEY.$": "$.detail.requestParameters.key",
-          "--extra-py-files": "s3://grejdi.data-platform/operations/packages/data_platform.zip",
-          "--additional-python-modules": "logging_tree==1.9"
+          "--extra-py-files": "s3://${aws_s3_bucket.data_platform.id}/operations/packages/data_platform.zip"
         }
       },
       "End": true,
@@ -183,15 +182,19 @@ resource "aws_glue_catalog_database" "data_platform" {
   name = "data_platform"
 }
 
-resource "aws_glue_job" "data_platform_incoming" {
-  name              = "data_platform_incoming"
+resource "aws_glue_job" "data_platform_ingest" {
+  name              = "data_platform_ingest"
   role_arn          = aws_iam_role.data_platform_glue.arn
-  glue_version      = "2.0"
-  number_of_workers = 10
+  glue_version      = "3.0"
+  number_of_workers = 2
   worker_type       = "G.1X"
 
+  execution_property {
+    max_concurrent_runs = 10
+  }
+
   command {
-    script_location = "s3://${aws_s3_bucket.data_platform.id}/operations/jobs/incoming.py"
+    script_location = "s3://${aws_s3_bucket.data_platform.id}/operations/glue_jobs/ingest.py"
   }
 }
 

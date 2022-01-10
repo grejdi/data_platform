@@ -1,6 +1,6 @@
 
-resource "aws_glue_catalog_table" "data_platform_incoming__grejdi_sample" {
-  name          = "incoming__grejdi_sample"
+resource "aws_glue_catalog_table" "data_platform_incoming__grejdi__sample" {
+  name          = "incoming__grejdi__sample"
   database_name = aws_glue_catalog_database.data_platform.name
 
   table_type = "EXTERNAL_TABLE"
@@ -45,8 +45,8 @@ resource "aws_glue_catalog_table" "data_platform_incoming__grejdi_sample" {
   }
 }
 
-resource "aws_glue_catalog_table" "data_platform_springboard__grejdi_sample" {
-  name          = "springboard__grejdi_sample"
+resource "aws_glue_catalog_table" "data_platform_springboard__grejdi__sample" {
+  name          = "springboard__grejdi__sample"
   database_name = aws_glue_catalog_database.data_platform.name
 
   table_type = "EXTERNAL_TABLE"
@@ -94,9 +94,9 @@ resource "aws_glue_catalog_table" "data_platform_springboard__grejdi_sample" {
     }
   }
 }
-resource "aws_glue_partition_index" "data_platform_springboard__grejdi_sample_snapshot" {
+resource "aws_glue_partition_index" "data_platform_springboard__grejdi__sample_snapshot" {
   database_name = aws_glue_catalog_database.data_platform.name
-  table_name    = aws_glue_catalog_table.data_platform_springboard__grejdi_sample.name
+  table_name    = aws_glue_catalog_table.data_platform_springboard__grejdi__sample.name
 
   partition_index {
     index_name = "snapshot"
