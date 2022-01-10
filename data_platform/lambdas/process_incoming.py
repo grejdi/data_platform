@@ -14,7 +14,8 @@ def run(loadS3Key):
   # intialize boto clients
   s3 = boto3.client('s3')
 
-  logging.error('HERE')
+  logging.error(os.environ.get('S3_BUCKET_INCOMING'))
+  logging.error(loadS3Key)
 
   # get s3 info for load
   try:
