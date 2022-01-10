@@ -68,3 +68,6 @@ jobs:
 
       - name: Update 'data_platform_process_incoming' AWS Lambda function.
         run: aws lambda update-function-code --function-name data_platform_process_incoming --s3-bucket grejdi.data-platform --s3-key operations/packages/data_platform.zip
+
+      - name: Update 'data_platform_process_ingestion' AWS Lambda function.
+        run: aws lambda update-function-code --function-name data_platform_process_ingestion --s3-bucket grejdi.data-platform --s3-key operations/packages/data_platform.zip

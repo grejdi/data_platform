@@ -157,14 +157,20 @@ resource "aws_cloudwatch_log_group" "data_platform_lambda_processing_incoming" {
   tags              = {}
 }
 
-resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_error" {
+resource "aws_cloudwatch_log_group" "data_platform_glue_job_error" {
   name              = "/aws-glue/jobs/error"
   retention_in_days = 30
   tags              = {}
 }
 
-resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_output" {
+resource "aws_cloudwatch_log_group" "data_platform_glue_job_output" {
   name              = "/aws-glue/jobs/output"
+  retention_in_days = 30
+  tags              = {}
+}
+
+resource "aws_cloudwatch_log_group" "data_platform_glue_job_output_v2" {
+  name              = "/aws-glue/jobs/logs-v2"
   retention_in_days = 30
   tags              = {}
 }
@@ -173,6 +179,9 @@ resource "aws_cloudwatch_log_group" "data_platform_incoming_glue_job_output" {
 
 
 
+resource "aws_glue_catalog_database" "data_platform" {
+  name = "data_platform"
+}
 
 resource "aws_glue_job" "data_platform_incoming" {
   name              = "data_platform_incoming"

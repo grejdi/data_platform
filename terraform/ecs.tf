@@ -131,6 +131,14 @@ resource "aws_ecs_task_definition" "data_platform" {
       {"name": "DB_PORT", "value": "5432"},
       {"name": "DB_USER", "value": "postgres"},
       {"name": "DB_NAME", "value": "dataplatform"},
+      {"name": "S3_BUCKET_INCOMING", "value": "${aws_s3_bucket.data_platform.id}"},
+      {"name": "S3_BUCKET_INCOMING_PREFIX", "value": "incoming/"},
+      {"name": "S3_BUCKET_ARCHIVE", "value": "${aws_s3_bucket.data_platform.id}"},
+      {"name": "S3_BUCKET_ARCHIVE_PREFIX", "value": "archive/"},
+      {"name": "S3_BUCKET_ERROR", "value": "${aws_s3_bucket.data_platform.id}"},
+      {"name": "S3_BUCKET_ERROR_PREFIX", "value": "error/"},
+      {"name": "S3_BUCKET_SPRINGBOARD", "value": "${aws_s3_bucket.data_platform.id}"},
+      {"name": "S3_BUCKET_SPRINGBOARD_PREFIX", "value": "output/"},
       {"name": "INGEST_STEP_FUNCTION_ARN", "value": "${aws_sfn_state_machine.data_platform_ingest.arn}"}
     ],
     "logConfiguration" : {

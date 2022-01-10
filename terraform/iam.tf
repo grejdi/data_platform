@@ -58,7 +58,7 @@ resource "aws_iam_role" "data_platform_eventbridge" {
         {
           Action   = "lambda:InvokeFunction"
           Effect   = "Allow"
-          Resource = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:data_platform"
+          Resource = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:not_active"
         }
       ]
     })
@@ -88,14 +88,6 @@ resource "aws_iam_role" "data_platform_stepfunctions" {
       Version = "2012-10-17"
 
       Statement = [
-        {
-          Action   = [
-            "ecs:RunTask",
-            "ecs:DescribeTasks",
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
         {
           Action   = [
             "glue:StartJobRun",
@@ -205,11 +197,6 @@ resource "aws_iam_role" "data_platform_ecs_execution" {
 
       Statement = [
         {
-          Action   = "rds-db:connect"
-          Effect   = "Allow"
-          Resource = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:prx-0294a7e8e8a2755e4/*"
-        },
-        {
           Action   = [
             "ecr:BatchGetImage",
             "ecr:BatchCheckLayerAvailability",
@@ -271,7 +258,7 @@ resource "aws_iam_role" "data_platform_ecs_task" {
         {
           Action   = "states:StartExecution"
           Effect   = "Allow"
-          Resource = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_incoming"
+          Resource = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_ingest"
         },
         {
           Action   = [
@@ -280,16 +267,8 @@ resource "aws_iam_role" "data_platform_ecs_task" {
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/data_platform:*"
           ]
-        },
-        {
-          Action   = [
-            "sqs:DeleteMessage",
-            "sqs:ReceiveMessage",
-          ]
-          Effect   = "Allow"
-          Resource = "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:data_platform_incoming"
         }
       ]
     })
@@ -332,7 +311,7 @@ resource "aws_iam_role" "data_platform_lambda" {
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/data_platform*:*"
           ]
         },
         {
@@ -382,7 +361,7 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
         Action   = [
           "ecs:RunTask"
         ],
-        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/dataplatform"
+        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/dataplatform:*"
       },
       {
         Effect   = "Allow",
@@ -422,7 +401,9 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
         Action   = [
           "lambda:UpdateFunctionCode"
         ],
-        Resource = aws_lambda_function.data_platform_process_incoming.arn
+        Resource = [
+          "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:data_platform_*"
+        ]
       }
     ]
   })

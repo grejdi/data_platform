@@ -42,11 +42,6 @@ else:
 
   # generate IAM-auth password
   dbPassword = rds.generate_db_auth_token(DBHostname=dbHost,Port=dbPort,DBUsername=dbUser)
-  logging.error(dbHost)
-  logging.error(dbPort)
-  logging.error(dbUser)
-  logging.error(dbPassword)
-  logging.error(dbName)
 
   dbURL = 'postgresql+psycopg2://{}:{}@{}/{}?sslmode={}&sslrootcert={}'.format(
     dbUser,
