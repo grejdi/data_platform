@@ -99,6 +99,15 @@ resource "aws_security_group" "data_platform" {
   }
 }
 
+resource "aws_vpc_endpoint" "data_platform_s3" {
+  vpc_id       = aws_vpc.data_platform.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+resource "aws_vpc_endpoint_route_table_association" "data_platform_s3" {
+  route_table_id  = aws_route_table.data_platform.id
+  vpc_endpoint_id = aws_vpc_endpoint.data_platform_s3.id
+}
+
 resource "aws_ecr_repository" "data_platform" {
   name = "dataplatform"
 }

@@ -322,6 +322,20 @@ resource "aws_iam_role" "data_platform_lambda" {
           ]
           Effect   = "Allow"
           Resource = "*"
+        },
+        {
+          Effect   = "Allow",
+          Action   = [
+            "s3:ListBucket"
+          ],
+          Resource = aws_s3_bucket.data_platform.arn
+        },
+        {
+          Effect   = "Allow",
+          Action   = [
+            "s3:GetObject"
+          ],
+          Resource = "${aws_s3_bucket.data_platform.arn}/incoming/*"
         }
       ]
     })
