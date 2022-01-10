@@ -18,18 +18,18 @@ def run(loadS3Key):
   logging.error(loadS3Key)
 
   # get s3 info for load
-  try:
-    loadS3Info = s3.head_object(
-      Bucket=os.environ.get('S3_BUCKET_INCOMING'),
-      Key=loadS3Key
-    )
-  # if any exception, return with error
-  except botocore.exceptions.ClientError as e:
-    logging.error('[data_platform] [lambda] [process_incoming]: {}'.format(e))
-    return {
-      'type': 'error',
-      'message': e
-    }
+  # try:
+  loadS3Info = s3.head_object(
+    Bucket=os.environ.get('S3_BUCKET_INCOMING'),
+    Key=loadS3Key
+  )
+  # # if any exception, return with error
+  # except botocore.exceptions.ClientError as e:
+  #   logging.error('[data_platform] [lambda] [process_incoming]: {}'.format(e))
+  #   return {
+  #     'type': 'error',
+  #     'message': e
+  #   }
 
   # start a db session to use with updating database
   with dbSession() as db:
