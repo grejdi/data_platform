@@ -361,7 +361,7 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
         Action   = [
           "ecs:RunTask"
         ],
-        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/dataplatform:*"
+        Resource = "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/dataplatform"
       },
       {
         Effect   = "Allow",
