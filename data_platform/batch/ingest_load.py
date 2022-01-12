@@ -23,6 +23,7 @@ def run():
     loadRecs = db.query(Load, Prefix).join(Prefix, Load.prefix_id == Prefix.id).filter(Load.status == 'ready').order_by(Load.s3_modified, Load.s3_key).all()
     for loadRec, prefixRec in loadRecs:
       if prefixRec.name in prefixes:
+        prefixes[prefixRec.name]['load_ids'].append(loadRec.id)
         prefixes[prefixRec.name]['load_s3_keys'].append('s3://{}/{}'.format(os.environ.get('S3_BUCKET_INCOMING'), loadRec.s3_key))
       else:
         prefixes[prefixRec.name] = {
@@ -30,6 +31,7 @@ def run():
           's3_prefix': prefixRec.s3_prefix,
           'snapshot': prefixRec.snapshot.isoformat(),
 
+          'load_ids': [ loadRec.id ],
           'load_s3_keys': [ 's3://{}/{}'.format(os.environ.get('S3_BUCKET_INCOMING'), loadRec.s3_key) ]
         }
 
@@ -37,7 +39,7 @@ def run():
     for prefixName, prefix in prefixes.items():
       # update load records' status to 'ingesting'
       # @todo this is not updating the modified field
-      db.query(Load).filter(Load.s3_key.in_(prefix.get('load_s3_keys'))).update({ Load.status: 'ingesting' })
+      db.query(Load).filter(Load.id.in_(prefix.get('load_ids'))).update({ Load.status: 'ingesting' })
       db.commit()
 
       # construct input for step function
@@ -68,7 +70,7 @@ def run():
         stepFunctions.exceptions.StateMachineDoesNotExist,
         stepFunctions.exceptions.StateMachineDeleting
       ) as e:
-        db.query(Load).filter(Load.s3_key.in_(prefix.get('load_s3_keys'))).update({ Load.status: 'ingesting_error' })
+        db.query(Load).filter(Load.s3_key.in_(prefix.get('load_ids'))).update({ Load.status: 'ingesting_error' })
         db.commit()
 
         logging.error('[data_platform] [batch] [ingest_load]: {}'.format(e))
