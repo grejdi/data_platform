@@ -123,7 +123,8 @@ resource "aws_sfn_state_machine" "data_platform_ingest" {
       "Parameters": {
         "JobName": "${aws_glue_job.data_platform_ingest.name}",
         "Arguments": {
-          "--OBJECT_KEY.$": "$.detail.requestParameters.key",
+          "--ENV.$": "$.env",
+          "--INPUT.$": "$.input",
           "--extra-py-files": "s3://${aws_s3_bucket.data_platform.id}/operations/packages/data_platform.zip"
         }
       },

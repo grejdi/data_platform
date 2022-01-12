@@ -35,13 +35,30 @@ def run():
       try:
         # construct input for step function
         stepFunctionInput = json.dumps({
-          'prefix_name': prefixName,
-          'load_object_keys': loadObjectKeys
+          'env': {
+            'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
+            'S3_BUCKET_SPRINGBOARD': os.environ.get('S3_BUCKET_SPRINGBOARD'),
+            'S3_BUCKET_SPRINGBOARD_PREFIX': os.environ.get('S3_BUCKET_SPRINGBOARD_PREFIX'),
+          },
+          'input': {
+            'prefixes': [
+              {
+                'name': 'sample',
+                's3_prefix': 'incoming/SAMPLE',
+                'snapshot': '2022-01-09',
+
+                'load_s3_keys': [
+                  's3://grejdi.data-platform/incoming/SAMPLE/sample01.csv',
+                  's3://grejdi.data-platform/incoming/SAMPLE/sample02.csv'
+                ]
+              }
+            ]
+          }
         })
 
         # run step function
         stepFunctions.start_execution(
-          stateMachineArn=os.environ.get('INGEST_STEP_FUNCTION_ARN')+'ds',
+          stateMachineArn=os.environ.get('INGEST_STEP_FUNCTION_ARN'),
           input=stepFunctionInput
         )
 

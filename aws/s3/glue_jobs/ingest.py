@@ -1,5 +1,4 @@
 
-from awsglue.dynamicframe import DynamicFrame
 import logging
 import json
 import sys
@@ -8,57 +7,42 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
+from awsglue.dynamicframe import DynamicFrame
 from pyspark.sql.functions import *
 
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
-args = getResolvedOptions(sys.argv, ['JOB_NAME', 'INPUT'])
+args = getResolvedOptions(sys.argv, ['JOB_NAME', 'ENV', 'INPUT'])
 
 # create job using the glue context
 job = Job(glueContext)
 # initialize job, with a default name 'ingest'
 job.init(args.get('JOB_NAME', 'ingest'), args)
 
-# read input
+# read env and input
+envDict = json.loads(args.get('ENV', '{}'))
 inputDict = json.loads(args.get('INPUT', '{}'))
-
-inputDict = {
-  'env': {
-    'GLUE_DATABASE_NAME': 'data_platform',
-    'S3_BUCKET_SPRINGBOARD': 'grejdi.data-platform',
-    'S3_BUCKET_SPRINGBOARD_PREFIX': 'output/',
-  },
-  'prefixes': [
-    {
-      'name': 'sample',
-      's3_prefix': 'incoming/SAMPLE',
-      'snapshot': '2022-01-09',
-
-      'load_s3_keys': [
-        's3://grejdi.data-platform/incoming/SAMPLE/sample01.csv',
-        's3://grejdi.data-platform/incoming/SAMPLE/sample02.csv'
-      ]
-    }
-  ]
-}
 
 # run glue transformations for each prefix
 for prefix in inputDict.get('prefixes', []):
 
   # read prefix using the data catalog in glue
   prefixDF = glueContext.create_dynamic_frame.from_catalog(
-    database=inputDict.get('env', {}).get('GLUE_DATABASE_NAME'),
+    database=envDict.get('GLUE_DATABASE_NAME'),
     table_name='incoming__{}'.format(prefix.get('name')),
     additional_options={
       'paths': prefix.get('load_s3_keys')
     },
     transformation_ctx="ingest_prefix_df_read"
   )
-  newDF = prefixDF.toDF()
-  newDF = newDF.withColumn("snapshot", lit(prefix.get('snapshot')))
-  prefixDF = DynamicFrame.fromDF(newDF, glueContext, "prefixDF")
+  # convert to spark dataframe so we can use withColum
+  prefixSparkDF = prefixDF.toDF()
+  # add a new column for snapshot and set to the value of the prefix's snapshot
+  prefixSparkDF = prefixSparkDF.withColumn("snapshot", lit(prefix.get('snapshot')))
+  # convert back to glue's dynamic frame
+  prefixDF = DynamicFrame.fromDF(prefixSparkDF, glueContext, "prefixDF")
 
   glueContext.write_dynamic_frame.from_options(
     frame=prefixDF,
@@ -66,8 +50,8 @@ for prefix in inputDict.get('prefixes', []):
     format='glueparquet',
     connection_options={
       'path': 's3://{}/{}{}.parquet/'.format(
-        inputDict.get('env', {}).get('S3_BUCKET_SPRINGBOARD'),
-        inputDict.get('env', {}).get('S3_BUCKET_SPRINGBOARD_PREFIX'),
+        envDict.get('S3_BUCKET_SPRINGBOARD'),
+        envDict.get('S3_BUCKET_SPRINGBOARD_PREFIX'),
         prefix.get('s3_prefix')
       ),
       'partitionKeys': ['snapshot']
