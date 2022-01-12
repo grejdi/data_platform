@@ -28,7 +28,7 @@ def run():
         prefixes[prefixRec.name] = {
           'name': prefixRec.name,
           's3_prefix': prefixRec.s3_prefix,
-          'snapshot': prefixRec.snapshot,
+          'snapshot': prefixRec.snapshot.isoformat(),
 
           'load_s3_keys': [ 's3://{}/{}'.format(os.environ.get('S3_BUCKET_INCOMING'), loadRec.s3_key) ]
         }
