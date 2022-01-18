@@ -64,7 +64,6 @@ jobs:
           ecs_cluster: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:cluster/dataplatform
           ecs_task_definition: arn:aws:ecs:${{secrets.AWS_DEFAULT_REGION}}:${{secrets.AWS_ACCOUNT_ID}}:task-definition/dataplatform
           ecs_task_network_configuration: "awsvpcConfiguration={subnets=[subnet-0a99fcc9c9fe1de79],securityGroups=[sg-06ac1dfad4ebcebb4],assignPublicIp=ENABLED}"
-          ecs_task_overrides: '{ "containerOverrides": [ { "name": "dataplatform", "command": ["alembic", "upgrade", "head"] } ] }'
 
       - name: Update 'data_platform_process_incoming' AWS Lambda function.
         run: aws lambda update-function-code --function-name data_platform_process_incoming --s3-bucket grejdi.data-platform --s3-key operations/packages/data_platform.zip
