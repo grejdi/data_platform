@@ -56,7 +56,7 @@ jobs:
         run: docker push ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_DEFAULT_REGION}}.amazonaws.com/dataplatform:main-latest
 
       - name: Run main container task to run migrations.
-        uses: grejdi/actions/amazon_ecs__run_task@v1
+        uses: grejdi/actions/amazon_ecs__fargate_run_task@v1
         with:
           aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
