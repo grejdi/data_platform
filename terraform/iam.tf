@@ -32,39 +32,6 @@ resource "aws_iam_role" "data_platform_rds_proxy" {
   }
 }
 
-resource "aws_iam_role" "data_platform_eventbridge" {
-  name = "data_platform_eventbridge"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Principal = {
-          Service = "events.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  inline_policy {
-    name = "data_platform_eventbridge_inline_policy"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-
-      Statement = [
-        {
-          Action   = "lambda:InvokeFunction"
-          Effect   = "Allow"
-          Resource = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:not_active"
-        }
-      ]
-    })
-  }
-}
-
 resource "aws_iam_role" "data_platform_stepfunctions" {
   name = "data_platform_stepfunctions"
 
@@ -219,7 +186,7 @@ resource "aws_iam_role" "data_platform_ecs_execution" {
           ]
           Effect   = "Allow"
           Resource = [
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*"
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/data_platform:*"
           ]
         }
       ]
@@ -390,8 +357,7 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          aws_iam_role.data_platform_ecs_execution.arn,
-          aws_iam_role.data_platform_ecs_task.arn
+          aws_iam_role.data_platform_ecs_execution.arn
         ]
       },
       {
