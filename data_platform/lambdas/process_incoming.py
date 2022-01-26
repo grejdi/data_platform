@@ -5,7 +5,7 @@ import botocore
 import logging
 
 from data_platform.db import dbSession
-from data_platform.db.models.prefix import Prefix
+from data_platform.db.models.table import Table
 from data_platform.db.models.load import Load
 
 
@@ -22,7 +22,7 @@ def run(loadS3Key):
     )
   # if any exception, return with error
   except botocore.exceptions.ClientError as e:
-    logging.error('[data_platform] [lambda] [process_incoming]: {}'.format(e))
+    logging.error('[data_platform] [lambdas] [process_incoming]: {}'.format(e))
     return {
       'type': 'error',
       'message': e
@@ -30,40 +30,53 @@ def run(loadS3Key):
 
   # start a db session to use with updating database
   with dbSession() as db:
-    # get all prefixes that are not deleted
-    prefixRecs = db.query(Prefix).filter(Prefix.deleted is not None).all()
+    # get all tables that are not deleted
+    tableRecs = db.query(Table).filter(Table.deleted is not None).all()
 
-    # determine which prefix the load is for
-    prefixAvailable = False
-    for prefixRec in prefixRecs:
-      if loadS3Key.startswith('{}{}/'.format(os.environ.get('S3_BUCKET_INCOMING_PREFIX'), prefixRec.s3_prefix)):
-        prefixAvailable = True
+    # determine which table the load is for
+    tableAvailable = False
+    # determine is the load is CDC (Change Data Capture)
+    isCDCLoad = False
+    for tableRec in tableRecs:
+      # check if it's regular load file
+      if loadKey.startswith('incoming/{}/'.format(tableRec.s3_prefix)):
+        isTableAvailable = True
 
-        # if we are trying to insert a snapshot key, we should update the snapshot
-        # value for the prefix
-        if loadS3Key == '{}{}'.format(os.environ.get('S3_BUCKET_INCOMING_PREFIX'), prefixRec.snapshot_s3_key):
-          prefixRec.snapshot = loadS3Info.get('LastModified') 
+      # check if it's a cdc load file (prefix ends with '__ct')
+      if loadKey.startswith('incoming/{}__ct/'.format(tableRec.s3_prefix)):
+        isTableAvailable = True
+        isCDCLoad = True
+
+      # if we have found a table record that we can associate the load with, then add the load record
+      if isTableAvailable:
+        # if we are trying to insert a load that matches the snapshot key, we should update the snapshot
+        # value for the table
+        if loadKey == 'incoming/{}'.format(tableRec.snapshot_s3_key):
+          tableRec.snapshot = loadS3Info.get('LastModified')
 
         # insert a load record
         loadRec = Load(**{
-          'prefix_id': prefixRec.id,
+          'table_id': tableRec.id,
           'status': 'ready',
-          'snapshot': prefixRec.snapshot,
-          's3_key': loadS3Key,
+          'snapshot': tableRec.snapshot,
+          'is_cdc': isCDCLoad,
+          's3_key': loadKey,
           's3_modified': loadS3Info.get('LastModified'),
+          's3_size': loadS3Info.get('Size'),
         })
         db.add(loadRec)
 
+        # commit load record insert, and any update to the table snapshot
         db.commit()
 
-        # we found the prefix and inserted the record, so stop 
+        # we found the table and inserted the record, so stop
         break
 
-    # if we didn't find the prefix, let others know by logging an error
-    if not prefixAvailable:
-      errorMessage = 'Prefix doesn\'t exist for Load: {}'.format(loadS3Key)
+    # if we didn't find the table, let others know by logging an error
+    if not isTableAvailable:
+      errorMessage = 'Table doesn\'t exist for the load object: {}'.format(loadKey)
 
-      logging.error('[data_platform] [lambda] [process_incoming]: {}'.format(errorMessage))
+      logging.error('[data_platform] [lambdas] [process_incoming]: {}'.format(errorMessage))
       return {
         'type': 'error',
         'message': errorMessage
