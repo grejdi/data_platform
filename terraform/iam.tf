@@ -357,7 +357,8 @@ resource "aws_iam_user_policy" "data_platform_github_actions_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          aws_iam_role.data_platform_ecs_execution.arn
+          aws_iam_role.data_platform_ecs_execution.arn,
+          aws_iam_role.data_platform_ecs_task.arn
         ]
       },
       {
