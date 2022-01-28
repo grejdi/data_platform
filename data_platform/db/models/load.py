@@ -1,6 +1,6 @@
 
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import INTEGER, TIMESTAMP, VARCHAR, DATE, BOOLEAN
+from sqlalchemy.dialects.postgresql import INTEGER, TIMESTAMP, VARCHAR, DATE, BOOLEAN, BIGINT
 
 from data_platform.db.models.base import Base
 
