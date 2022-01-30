@@ -39,11 +39,11 @@ def run(loadS3Key):
     isCDCLoad = False
     for tableRec in tableRecs:
       # check if it's regular load file
-      if loadKey.startswith('incoming/{}/'.format(tableRec.s3_prefix)):
+      if loadKey.startswith('incoming/{}'.format(tableRec.s3_prefix)):
         isTableAvailable = True
 
       # check if it's a cdc load file (prefix ends with '__ct')
-      if loadKey.startswith('incoming/{}__ct/'.format(tableRec.s3_prefix)):
+      if loadKey.startswith('incoming/{}cdc/'.format(tableRec.s3_prefix)):
         isTableAvailable = True
         isCDCLoad = True
 
