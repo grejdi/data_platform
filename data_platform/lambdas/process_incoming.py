@@ -9,7 +9,7 @@ from data_platform.db.models.table import Table
 from data_platform.db.models.load import Load
 
 
-def run(loadS3Key):
+def run(loadKey):
 
   # intialize boto clients
   s3 = boto3.client('s3')
@@ -18,7 +18,7 @@ def run(loadS3Key):
   try:
     loadS3Info = s3.head_object(
       Bucket=os.environ.get('S3_BUCKET_INCOMING'),
-      Key=loadS3Key
+      Key=loadKey
     )
   # if any exception, return with error
   except botocore.exceptions.ClientError as e:
