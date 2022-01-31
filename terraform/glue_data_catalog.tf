@@ -60,6 +60,11 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample" {
     type    = "string"
   }
 
+  partition_keys {
+    name    = "identifier"
+    type    = "string"
+  }
+
   storage_descriptor {
     location      = "s3://${aws_s3_bucket.data_platform.id}/output/vendor/SAMPLE.parquet/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
@@ -95,8 +100,8 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample" {
   }
 }
 
-resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample__ct" {
-  name          = "incoming__vendor__sample__ct"
+resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample__cdc" {
+  name          = "incoming__vendor__sample__cdc"
   database_name = aws_glue_catalog_database.data_platform.name
 
   table_type = "EXTERNAL_TABLE"
@@ -107,7 +112,7 @@ resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample__ct" {
   }
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.data_platform.id}/incoming/vendor/SAMPLE__ct/"
+    location      = "s3://${aws_s3_bucket.data_platform.id}/incoming/vendor/SAMPLE__cdc/"
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
@@ -156,8 +161,8 @@ resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample__ct" {
   }
 }
 
-resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample__ct" {
-  name          = "springboard__vendor__sample__ct"
+resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample__cdc" {
+  name          = "springboard__vendor__sample__cdc"
   database_name = aws_glue_catalog_database.data_platform.name
 
   table_type = "EXTERNAL_TABLE"
@@ -177,7 +182,7 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample__ct
   }
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.data_platform.id}/output/vendor/SAMPLE__ct.parquet/"
+    location      = "s3://${aws_s3_bucket.data_platform.id}/output/vendor/SAMPLE__cdc.parquet/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 

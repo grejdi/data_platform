@@ -50,8 +50,7 @@ for prefix in inputDict.get('prefixes', []):
     format='glueparquet',
     connection_options={
       'path': 's3://{}/{}{}.parquet/'.format(
-        envDict.get('S3_BUCKET_SPRINGBOARD'),
-        envDict.get('S3_BUCKET_SPRINGBOARD_PREFIX'),
+        envDict.get('S3_BUCKET'),
         prefix.get('s3_prefix')
       ),
       'partitionKeys': ['snapshot']

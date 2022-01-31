@@ -32,8 +32,7 @@ def startStepFunctionExecution(botoClient, db, tables):
         input=json.dumps({
           'env': json.dumps({
             'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
-            'S3_BUCKET_SPRINGBOARD': os.environ.get('S3_BUCKET_SPRINGBOARD'),
-            'S3_BUCKET_SPRINGBOARD_PREFIX': os.environ.get('S3_BUCKET_SPRINGBOARD_PREFIX'),
+            'S3_BUCKET': os.environ.get('S3_BUCKET')
           }),
           'input': json.dumps({
             'tables': tables
@@ -114,8 +113,6 @@ def run():
     loadRecs = db.query(Load, Table)\
                  .join(Table, Load.table_id == Table.id)\
                  .filter(Load.status == 'ready')\
-                 # get records that are older than 30 minutes ago, giving time s3 events/lambda to process
-                 # .filter(Load.s3_modified < (datetime.datetime.utcnow() - datetime.timedelta(minutes=30)))\
                  .order_by(Load.s3_modified, Load.s3_key)\
                  .all()
 
@@ -128,48 +125,24 @@ def run():
           'name': tableRec.name,
           's3_prefix': tableRec.s3_prefix,
           'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
+          'is_cdc': True,
 
-          'loads': [
-            {
-              'is_cdc': True,
-              'id': loadRec.id,
-              's3_key': 's3://{}/{}'.format(os.environ.get('S3_BUCKET'), loadRec.s3_key)
-            }
-          ],
-          'loads_size': loadRec.s3_size
+          'load_id': loadRec.id,
+          'load_s3_key': loadRec.s3_key,
+          'load_size': loadRec.s3_size
         })
 
       # for regular loads, they can be appended into one Spark data frame so append them
       else:
-        # check to see if the table has already been added for ingestion
-        tableAdded = False
-        for table in tables:
-          # if table added, just append the load info
-          if table.get('name') == tableRec.name && table.get('load_is_cdc', False):
-            table['loads'].append({
-              'id': loadRec.id,
-              's3_key': 's3://{}/{}'.format(os.environ.get('S3_BUCKET'), loadRec.s3_key)
-            })
-            table['loads_size'] += loadRec.s3_size # add to content size
+        tables.append({
+          'name': tableRec.name,
+          's3_prefix': tableRec.s3_prefix,
+          'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
 
-            tableAdded = True
-            break
-
-        # if table not added, add it with the load info
-        if not tableAdded:
-          tables.append({
-            'name': tableRec.name,
-            's3_prefix': tableRec.s3_prefix,
-            'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
-
-            'loads': [
-              {
-                'id': loadRec.id,
-                's3_key': 's3://{}/{}'.format(os.environ.get('S3_BUCKET'), loadRec.s3_key)
-              }
-            ],
-            'loads_size': loadRec.s3_size
-          })
+          'load_id': loadRec.id,
+          'load_s3_key': loadRec.s3_key,
+          'load_size': loadRec.s3_size
+        })
 
     # start ingesting workflow
     executionCount = 0
