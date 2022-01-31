@@ -2,6 +2,7 @@
 import os
 import logging
 import datetime
+import time
 from dotenv import load_dotenv
 import boto3
 import json
@@ -19,7 +20,7 @@ def startStepFunctionExecution(botoClient, db, tables):
   # get load ids we are updating
   loadIds = []
   for table in tables:
-    loadIds += table.get('load_id', [])
+    loadIds.append(table.get('load_id'))
 
   try:
     # if on local environment, provide commands for workflow
@@ -168,6 +169,11 @@ def run():
       if executionCount <= executionLimit:
         startStepFunctionExecution(stepFunctionsClient, db, stepFunctionInputTables)
 
+    # if there is nothing to execute, sleep for 5 seconds before trying again
+    # time.sleep(5)
+
 
 if __name__ == '__main__':
+  # while True:
+  #   run()
   run()
