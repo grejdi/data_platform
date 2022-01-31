@@ -141,8 +141,8 @@ resource "aws_ecs_task_definition" "data_platform" {
       {"name": "DB_USER", "value": "postgres"},
       {"name": "DB_NAME", "value": "dataplatform"},
       {"name": "GLUE_DATABASE_NAME", "value": "${aws_glue_catalog_database.data_platform.name}"},
-      {"name": "INGEST_STEP_FUNCTION_ARN", "value": "${aws_sfn_state_machine.data_platform_ingest.arn}"},
-      {"name": "S3_BUCKET", "value": "${aws_s3_bucket.data_platform.id}"}
+      {"name": "S3_BUCKET", "value": "${aws_s3_bucket.data_platform.id}"},
+      {"name": "STEP_FUNCTION_INGEST_ARN", "value": "${aws_sfn_state_machine.data_platform_ingest.arn}"}
     ],
     "logConfiguration" : {
       "logDriver" :"awslogs",

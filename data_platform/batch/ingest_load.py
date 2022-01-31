@@ -142,7 +142,7 @@ def run():
     executionCount = 0
     byteCount = 0
     stepFunctionInputTables = []
-    for table in tables.values():
+    for table in tables:
       # update byte count
       byteCount += table.get('load_size', 0)
 

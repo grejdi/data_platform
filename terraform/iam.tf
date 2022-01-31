@@ -223,7 +223,10 @@ resource "aws_iam_role" "data_platform_ecs_task" {
           Resource = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:prx-0294a7e8e8a2755e4/*"
         },
         {
-          Action   = "states:StartExecution"
+          Action   = [
+            "states:ListExecutions",
+            "states:StartExecution"
+          ]
           Effect   = "Allow"
           Resource = "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:data_platform_ingest"
         },
