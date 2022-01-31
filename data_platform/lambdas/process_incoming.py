@@ -20,6 +20,7 @@ def run(loadKey):
       Bucket=os.environ.get('S3_BUCKET_INCOMING'),
       Key=loadKey
     )
+    logging.error(loadS3Info)
   # if any exception, return with error
   except botocore.exceptions.ClientError as e:
     logging.error('[data_platform] [lambdas] [process_incoming]: {}'.format(e))
@@ -62,7 +63,7 @@ def run(loadKey):
           'is_cdc': isCDCLoad,
           's3_key': loadKey,
           's3_modified': loadS3Info.get('LastModified'),
-          's3_size': loadS3Info.get('Size'),
+          's3_size': loadS3Info.get('ContentLength', 0),
         })
         db.add(loadRec)
 
