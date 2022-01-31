@@ -28,27 +28,18 @@ def startStepFunctionExecution(botoClient, db, tables):
       logging.info('@todo')
     else:
       # run step function
-      # botoClient.start_execution(
-      #   stateMachineArn=os.environ.get('STEP_FUNCTION_INGEST_ARN'),
-      #   input=json.dumps({
-      #     'env': json.dumps({
-      #       'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
-      #       'S3_BUCKET': os.environ.get('S3_BUCKET')
-      #     }),
-      #     'input': json.dumps({
-      #       'tables': tables
-      #     })
-      #   })
-      # )
-      logging.error(json.dumps({
-        'env': json.dumps({
-          'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
-          'S3_BUCKET': os.environ.get('S3_BUCKET')
-        }),
-        'input': json.dumps({
-          'tables': tables
+      botoClient.start_execution(
+        stateMachineArn=os.environ.get('STEP_FUNCTION_INGEST_ARN'),
+        input=json.dumps({
+          'env': json.dumps({
+            'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
+            'S3_BUCKET': os.environ.get('S3_BUCKET')
+          }),
+          'input': json.dumps({
+            'tables': tables
+          })
         })
-      }))
+      )
 
     # update load records' status to 'ingesting'
     # note: setting modified explicitly since before_update in base.py doesn't run. @todo why?
@@ -105,8 +96,6 @@ def run():
         # use execution limit
         maxResults=executionLimit # max allowed is 1000
       )
-      # @todo remove logging 
-      logging.error(listExecutionsResponse)
 
       # adjust execution limit based on the number currently running
       executionLimit = executionLimit - len(listExecutionsResponse.get('executions', []))
@@ -171,6 +160,7 @@ def run():
 
     # if there is nothing to execute, sleep for 5 seconds before trying again
     time.sleep(5)
+    logging.error('Running...')
 
 
 if __name__ == '__main__':
