@@ -17,10 +17,9 @@ def run(loadKey):
   # get s3 info for load
   try:
     loadS3Info = s3.head_object(
-      Bucket=os.environ.get('S3_BUCKET_INCOMING'),
+      Bucket=os.environ.get('S3_BUCKET'),
       Key=loadKey
     )
-    logging.error(loadS3Info)
   # if any exception, return with error
   except botocore.exceptions.ClientError as e:
     logging.error('[data_platform] [lambdas] [process_incoming]: {}'.format(e))
@@ -55,17 +54,21 @@ def run(loadKey):
         if loadKey == 'incoming/{}'.format(tableRec.snapshot_s3_key):
           tableRec.snapshot = loadS3Info.get('LastModified')
 
-        # insert a load record
-        loadRec = Load(**{
-          'table_id': tableRec.id,
-          'status': 'ready',
-          'snapshot': tableRec.snapshot,
-          'is_cdc': isCDCLoad,
-          's3_key': loadKey,
-          's3_modified': loadS3Info.get('LastModified'),
-          's3_size': loadS3Info.get('ContentLength', 0),
-        })
-        db.add(loadRec)
+        # if we have this load in the database already, then skip insert
+        if db.query(Load).filter(Load.s3_key==loadKey).filter(Load.s3_modified==loadS3Info.get('LastModified')).first():
+          break
+        else:
+          # insert a load record
+          loadRec = Load(**{
+            'table_id': tableRec.id,
+            'status': 'ready',
+            'snapshot': tableRec.snapshot,
+            'is_cdc': isCDCLoad,
+            's3_key': loadKey,
+            's3_modified': loadS3Info.get('LastModified'),
+            's3_size': loadS3Info.get('ContentLength', 0),
+          })
+          db.add(loadRec)
 
         # commit load record insert, and any update to the table snapshot
         db.commit()

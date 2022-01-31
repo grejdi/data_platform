@@ -24,22 +24,22 @@ resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample" {
     }
 
     columns {
-      name = "SAMPLE_ID"
+      name = "sample_id"
       type = "int"
     }
 
     columns {
-      name = "SAMPLE_NAME"
+      name = "sample_name"
       type = "string"
     }
 
     columns {
-      name    = "INSERTED_DTM"
+      name    = "inserted_dtm"
       type    = "string"
     }
 
     columns {
-      name    = "UPDATED_DTM"
+      name    = "updated_dtm"
       type    = "string"
     }
   }
@@ -56,7 +56,7 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample" {
   }
 
   partition_keys {
-    name    = "SNAPSHOT"
+    name    = "snapshot"
     type    = "string"
   }
 
@@ -74,22 +74,22 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample" {
     }
 
     columns {
-      name = "SAMPLE_ID"
+      name = "sample_id"
       type = "int"
     }
 
     columns {
-      name = "SAMPLE_NAME"
+      name = "sample_name"
       type = "string"
     }
 
     columns {
-      name    = "INSERTED_DTM"
+      name    = "inserted_dtm"
       type    = "string"
     }
 
     columns {
-      name    = "UPDATED_DTM"
+      name    = "updated_dtm"
       type    = "string"
     }
   }
@@ -120,37 +120,37 @@ resource "aws_glue_catalog_table" "data_platform_incoming__vendor__sample__ct" {
     }
 
     columns {
-      name = "SEQ"
+      name = "seq"
       type = "string"
     }
 
     columns {
-      name = "OPER"
+      name = "oper"
       type = "string"
     }
 
     columns {
-      name = "TIMESTAMP"
+      name = "timestamp"
       type = "string"
     }
 
     columns {
-      name = "SAMPLE_ID"
+      name = "sample_id"
       type = "int"
     }
 
     columns {
-      name = "SAMPLE_NAME"
+      name = "sample_name"
       type = "string"
     }
 
     columns {
-      name    = "INSERTED_DTM"
+      name    = "inserted_dtm"
       type    = "string"
     }
 
     columns {
-      name    = "UPDATED_DTM"
+      name    = "updated_dtm"
       type    = "string"
     }
   }
@@ -167,12 +167,12 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample__ct
   }
 
   partition_keys {
-    name    = "SNAPSHOT"
+    name    = "snapshot"
     type    = "string"
   }
 
   partition_keys {
-    name    = "IDENTIFIER"
+    name    = "identifier"
     type    = "string"
   }
 
@@ -190,37 +190,37 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample__ct
     }
 
     columns {
-      name = "SEQ"
+      name = "seq"
       type = "string"
     }
 
     columns {
-      name = "OPER"
+      name = "oper"
       type = "string"
     }
 
     columns {
-      name = "TIMESTAMP"
+      name = "timestamp"
       type = "string"
     }
 
     columns {
-      name = "SAMPLE_ID"
+      name = "sample_id"
       type = "int"
     }
 
     columns {
-      name = "SAMPLE_NAME"
+      name = "sample_name"
       type = "string"
     }
 
     columns {
-      name    = "INSERTED_DTM"
+      name    = "inserted_dtm"
       type    = "string"
     }
 
     columns {
-      name    = "UPDATED_DTM"
+      name    = "updated_dtm"
       type    = "string"
     }
   }

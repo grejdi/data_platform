@@ -49,14 +49,7 @@ resource "aws_lambda_function" "data_platform_process_incoming" {
       DB_NAME = "dataplatform"
       GLUE_DATABASE_NAME = "${aws_glue_catalog_database.data_platform.name}"
       INGEST_STEP_FUNCTION_ARN = "${aws_sfn_state_machine.data_platform_ingest.arn}"
-      S3_BUCKET_INCOMING = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_INCOMING_PREFIX = "incoming/"
-      S3_BUCKET_ARCHIVE = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_ARCHIVE_PREFIX = "archive/"
-      S3_BUCKET_ERROR = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_ERROR_PREFIX = "error/"
-      S3_BUCKET_SPRINGBOARD = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_SPRINGBOARD_PREFIX = "output/"
+      S3_BUCKET = "${aws_s3_bucket.data_platform.id}"
     }
   }
 }
@@ -90,14 +83,7 @@ resource "aws_lambda_function" "data_platform_process_ingestion" {
       DB_NAME = "dataplatform"
       GLUE_DATABASE_NAME = "${aws_glue_catalog_database.data_platform.name}"
       INGEST_STEP_FUNCTION_ARN = "${aws_sfn_state_machine.data_platform_ingest.arn}"
-      S3_BUCKET_INCOMING = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_INCOMING_PREFIX = "incoming/"
-      S3_BUCKET_ARCHIVE = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_ARCHIVE_PREFIX = "archive/"
-      S3_BUCKET_ERROR = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_ERROR_PREFIX = "error/"
-      S3_BUCKET_SPRINGBOARD = "${aws_s3_bucket.data_platform.id}"
-      S3_BUCKET_SPRINGBOARD_PREFIX = "output/"
+      S3_BUCKET = "${aws_s3_bucket.data_platform.id}"
     }
   }
 }
