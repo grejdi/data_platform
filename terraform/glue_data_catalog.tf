@@ -97,6 +97,34 @@ resource "aws_glue_catalog_table" "data_platform_springboard__vendor__sample" {
       name    = "updated_dtm"
       type    = "string"
     }
+
+    columns {
+      name    = "snapshot"
+      type    = "string"
+    }
+
+    columns {
+      name    = "identifier"
+      type    = "string"
+    }
+  }
+}
+resource "aws_glue_partition_index" "data_platform_springboard__vendor__sample_snapshot" {
+  database_name = aws_glue_catalog_database.data_platform.name
+  table_name    = aws_glue_catalog_table.data_platform_springboard__vendor__sample.name
+
+  partition_index {
+    index_name = "snapshot"
+    keys       = ["snapshot"]
+  }
+}
+resource "aws_glue_partition_index" "data_platform_springboard__vendor__sample_snapshot_identifier" {
+  database_name = aws_glue_catalog_database.data_platform.name
+  table_name    = aws_glue_catalog_table.data_platform_springboard__vendor__sample.name
+
+  partition_index {
+    index_name = "snapshot_identifier"
+    keys       = ["snapshot", "identifier"]
   }
 }
 

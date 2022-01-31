@@ -170,10 +170,10 @@ def run():
         startStepFunctionExecution(stepFunctionsClient, db, stepFunctionInputTables)
 
     # if there is nothing to execute, sleep for 5 seconds before trying again
-    # time.sleep(5)
+    time.sleep(5)
 
 
 if __name__ == '__main__':
-  # while True:
-  #   run()
-  run()
+  while True:
+    run()
+  # run()

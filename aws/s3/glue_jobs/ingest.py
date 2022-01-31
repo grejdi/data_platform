@@ -1,4 +1,5 @@
 
+import os
 import logging
 import json
 import sys
@@ -16,47 +17,56 @@ glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'ENV', 'INPUT'])
 
-# create job using the glue context
-job = Job(glueContext)
-# initialize job, with a default name 'ingest'
-job.init(args.get('JOB_NAME', 'ingest'), args)
-
-# read env and input
+# read arguments
+jobName = args.get('JOB_NAME', 'ingest')
 envDict = json.loads(args.get('ENV', '{}'))
 inputDict = json.loads(args.get('INPUT', '{}'))
 
-# run glue transformations for each prefix
-for prefix in inputDict.get('prefixes', []):
+# create job using the glue context
+job = Job(glueContext)
+# initialize job
+job.init(jobName, args)
 
-  # read prefix using the data catalog in glue
-  prefixDF = glueContext.create_dynamic_frame.from_catalog(
+# run glue transformations for each cubic ods table
+for table in inputDict.get('tables', []):
+  dataCatalogTableName = 'incoming__{}'.format(table.get('name'))
+  tableS3Prefix = table.get('s3_prefix')
+  if table.get('load_is_cdc', False):
+    dataCatalogTableName += '__cdc'
+    tableS3Prefix += '__cdc'
+
+  # create table dataframe using the data catalog table in glue
+  tableDF = glueContext.create_dynamic_frame.from_catalog(
     database=envDict.get('GLUE_DATABASE_NAME'),
-    table_name='incoming__{}'.format(prefix.get('name')),
+    table_name=dataCatalogTableName,
     additional_options={
-      'paths': prefix.get('load_s3_keys')
+      'paths': [ 's3://{}/{}'.format(envDict.get('S3_BUCKET'), table.get('load_s3_key')) ]
     },
-    transformation_ctx="ingest_prefix_df_read"
+    transformation_ctx='{}_table_df_read'.format(jobName)
   )
-  # convert to spark dataframe so we can use withColum
-  prefixSparkDF = prefixDF.toDF()
-  # add a new column for snapshot and set to the value of the prefix's snapshot
-  prefixSparkDF = prefixSparkDF.withColumn("snapshot", lit(prefix.get('snapshot')))
-  # convert back to glue's dynamic frame
-  prefixDF = DynamicFrame.fromDF(prefixSparkDF, glueContext, "prefixDF")
+  # convert to spark dataframe so we can use withColumn
+  tableSparkDF = tableDF.toDF()
 
+  # add a new column for 'snapshot' and set to the value of the table's snapshot value
+  tableSparkDF = tableSparkDF.withColumn('snapshot', lit(table.get('snapshot')))
+  tableSparkDF = tableSparkDF.withColumn('identifier', lit(os.path.basename(table.get('load_s3_key'))))
+  # convert back to glue's dynamic frame
+  tableDF = DynamicFrame.fromDF(tableSparkDF, glueContext, "tableDF")
+
+  # write out to parquet
   glueContext.write_dynamic_frame.from_options(
-    frame=prefixDF,
+    frame=tableDF,
     connection_type='s3',
     format='glueparquet',
     connection_options={
-      'path': 's3://{}/{}{}.parquet/'.format(
+      'path': 's3://{}/output/{}.parquet/'.format(
         envDict.get('S3_BUCKET'),
-        prefix.get('s3_prefix')
+        tableS3Prefix
       ),
-      'partitionKeys': ['snapshot']
+      'partitionKeys': [ 'snapshot', 'identifier' ]
     },
     format_options={ 'compression': 'gzip' },
-    transformation_ctx='ingest_prefix_df_write_parquet',
-  )  
+    transformation_ctx='{}_table_df_write_parquet'.format(jobName)
+  )
 
 job.commit()
