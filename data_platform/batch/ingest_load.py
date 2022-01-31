@@ -19,7 +19,7 @@ def startStepFunctionExecution(botoClient, db, tables):
   # get load ids we are updating
   loadIds = []
   for table in tables:
-    loadIds += table.get('load_ids', [])
+    loadIds += table.get('load_id', [])
 
   try:
     # if on local environment, provide commands for workflow
@@ -27,18 +27,27 @@ def startStepFunctionExecution(botoClient, db, tables):
       logging.info('@todo')
     else:
       # run step function
-      botoClient.start_execution(
-        stateMachineArn=os.environ.get('STEP_FUNCTION_INGEST_ARN'),
-        input=json.dumps({
-          'env': json.dumps({
-            'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
-            'S3_BUCKET': os.environ.get('S3_BUCKET')
-          }),
-          'input': json.dumps({
-            'tables': tables
-          })
+      # botoClient.start_execution(
+      #   stateMachineArn=os.environ.get('STEP_FUNCTION_INGEST_ARN'),
+      #   input=json.dumps({
+      #     'env': json.dumps({
+      #       'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
+      #       'S3_BUCKET': os.environ.get('S3_BUCKET')
+      #     }),
+      #     'input': json.dumps({
+      #       'tables': tables
+      #     })
+      #   })
+      # )
+      logging.error(json.dumps({
+        'env': json.dumps({
+          'GLUE_DATABASE_NAME': os.environ.get('GLUE_DATABASE_NAME'),
+          'S3_BUCKET': os.environ.get('S3_BUCKET')
+        }),
+        'input': json.dumps({
+          'tables': tables
         })
-      )
+      }))
 
     # update load records' status to 'ingesting'
     # note: setting modified explicitly since before_update in base.py doesn't run. @todo why?
@@ -118,31 +127,16 @@ def run():
 
     # put them into a structure that makes sense as a step function input
     for loadRec, tableRec in loadRecs:
-      # for cdc loads, we always have one table and one load. otherwise Spark
-      # will load them into one data frame, and output into one parquet file
-      if loadRec.is_cdc:
-        tables.append({
-          'name': tableRec.name,
-          's3_prefix': tableRec.s3_prefix,
-          'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
-          'is_cdc': True,
+      tables.append({
+        'name': tableRec.name,
+        's3_prefix': tableRec.s3_prefix,
+        'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
 
-          'load_id': loadRec.id,
-          'load_s3_key': loadRec.s3_key,
-          'load_size': loadRec.s3_size
-        })
-
-      # for regular loads, they can be appended into one Spark data frame so append them
-      else:
-        tables.append({
-          'name': tableRec.name,
-          's3_prefix': tableRec.s3_prefix,
-          'snapshot': tableRec.snapshot.strftime("%Y%m%d%H%M%S"),
-
-          'load_id': loadRec.id,
-          'load_s3_key': loadRec.s3_key,
-          'load_size': loadRec.s3_size
-        })
+        'load_id': loadRec.id,
+        'load_s3_key': loadRec.s3_key,
+        'load_size': loadRec.s3_size,
+        'load_is_cdc': loadRec.is_cdc
+      })
 
     # start ingesting workflow
     executionCount = 0
@@ -150,7 +144,7 @@ def run():
     stepFunctionInputTables = []
     for table in tables.values():
       # update byte count
-      byteCount += table.get('loads_size', 0)
+      byteCount += table.get('load_size', 0)
 
       # add to the step function input
       stepFunctionInputTables.append(table)
