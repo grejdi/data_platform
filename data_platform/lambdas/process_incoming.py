@@ -34,7 +34,7 @@ def run(loadKey):
     tableRecs = db.query(Table).filter(Table.deleted is not None).all()
 
     # determine which table the load is for
-    tableAvailable = False
+    isTableAvailable = False
     # determine is the load is CDC (Change Data Capture)
     isCDCLoad = False
     for tableRec in tableRecs:
