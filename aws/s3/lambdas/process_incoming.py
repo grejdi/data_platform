@@ -6,8 +6,12 @@ from data_platform.lambdas import process_incoming
 
 
 def run(event, context):
-  logging.error(json.dumps(event))
-  return process_incoming.run(event.get('detail', {}).get('requestParameters', {}).get('key'))
+  if event.get('detail', {}).get('eventName', '') != 'HeadObject':
+    logging.error(json.dumps(event))
+    return process_incoming.run(event.get('detail', {}).get('requestParameters', {}).get('key'))
+  return {
+    'type': 'success'
+  }
 
 if __name__ == '__main__':
   # test
