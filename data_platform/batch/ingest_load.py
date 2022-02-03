@@ -112,6 +112,7 @@ def run():
     loadRecs = db.query(Load, Table)\
                  .join(Table, Load.table_id == Table.id)\
                  .filter(Load.status == 'ready')\
+                 .filter(Load.s3_modified < (datetime.datetime.utcnow() - datetime.timedelta(seconds=30)))\
                  .order_by(Load.s3_modified, Load.s3_key)\
                  .all()
 
